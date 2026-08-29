@@ -1,0 +1,106 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title">All Notifications</h3>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_main' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Notifications</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="row">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="card-title mb-0">Notifications</h4>
+            <a href="{% url 'mark_all_notifications_read' %}" class="btn btn-sm btn-outline-primary">
+              Mark all as read
+            </a>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th style="width: 50px;"></th>
+                  <th>Title</th>
+                  <th>Message</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for notification in notifications %}
+                <tr class="{% if not notification.is_read %}table-warning{% endif %}">
+                  <td>
+                    <div class="preview-icon bg-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                      <i class="mdi {{ notification.icon }}
+                        {% if notification.level == 'success' %} text-success
+                        {% elif notification.level == 'warning' %} text-warning
+                        {% elif notification.level == 'danger' %} text-danger
+                        {% else %} text-info
+                        {% endif %}"
+                        style="font-size: 18px;">
+                      </i>
+                    </div>
+                  </td>
+                  <td>
+                    <strong>{{ notification.title }}</strong>
+                  </td>
+                  <td>{{ notification.message }}</td>
+                  <td>
+                    <small class="text-muted">{{ notification.created_at|timesince }} ago</small><br>
+                    <small class="text-muted">{{ notification.created_at|date:"d M Y, H:i" }}</small>
+                  </td>
+                  <td>
+                    {% if notification.is_read %}
+                      <span class="badge badge-success">Read</span>
+                    {% else %}
+                      <span class="badge badge-danger">Unread</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if notification.link %}
+                      <a href="{% url 'mark_notification_read' notification.id %}?next={{ notification.link }}" 
+                         class="btn btn-sm btn-primary">
+                        View
+                      </a>
+                    {% else %}
+                      <a href="{% url 'mark_notification_read' notification.id %}" 
+                         class="btn btn-sm btn-outline-secondary">
+                        Mark Read
+                      </a>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="6" class="text-center text-muted py-5">
+                    No notifications found.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination (optional) -->
+          {% if is_paginated %}
+          <div class="mt-4">
+            {% include 'includes/pagination.html' %}
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

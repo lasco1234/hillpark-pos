@@ -1,0 +1,257 @@
+{% extends 'sales_layout.html' %}
+{% load humanize %}
+
+{% block title %}
+    Sales History
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="fw-bold mb-0 responsive-title" style="color: #647688;">Sales History</h2>
+        <a href="{% url 'pos_home' %}" class="btn btn-primary">← Back to POS</a>
+    </div>
+
+    <!-- ========== PERIOD FILTER ========== -->
+    <div class="card shadow-sm mb-4" style="border-radius: 12px; background-color: #647688;">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12">
+                    <div class="btn-group flex-wrap" role="group">
+                        <a href="?period=today"
+                           class="btn btn-sm text-light {% if period == 'today' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            Today
+                        </a>
+                        <a href="?period=week"
+                           class="btn btn-sm text-light {% if period == 'week' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            This Week
+                        </a>
+                        <a href="?period=month"
+                           class="btn btn-sm text-light {% if period == 'month' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            This Month
+                        </a>
+                        <a href="?period=year"
+                           class="btn btn-sm text-light {% if period == 'year' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            This Year
+                        </a>
+                        <a href="?period=all"
+                           class="btn btn-sm text-light {% if period == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            All Time
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small mb-1 text-light">From</label>
+                    <input type="date" name="start_date" value="{{ start_date }}"
+                           class="form-control form-control-sm"
+                           style="background-color: #ebf1f7; color: black;">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1 text-light">To</label>
+                    <input type="date" name="end_date" value="{{ end_date }}"
+                           class="form-control form-control-sm"
+                           style="background-color: #ebf1f7; color: black;">
+                </div>
+                <div class="col-md-3">
+                    <input type="hidden" name="period" value="custom">
+                    <button type="submit" class="btn btn-sm btn-success w-100">
+                        Apply Custom Range
+                    </button>
+                </div>
+                <div class="col-md-3 text-md-end">
+                    <span class="badge bg-secondary fs-6">
+                        Showing: {{ period_label }}
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== KPI CARDS ========== -->
+    <div class="card bg-light text-dark my-4 shadow-sm" style="border-radius: 15px;">
+        <div class="card-body row">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(163, 160, 158);">
+                        <i class="mdi mdi-chart-line"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Total Sales</div>
+                        <div>Tsh.{{ sold_price|floatformat:2|intcomma }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(163, 160, 158);">
+                        <i class="mdi mdi-cart-outline"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Total Buy Price</div>
+                        <div>Tsh.{{ total_buy|floatformat:2|intcomma }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(163, 160, 158);">
+                        <i class="mdi mdi-trending-up"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Gross Profit</div>
+                        <div>Tsh.{{ gross_profit|floatformat:2|intcomma }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(163, 160, 158);">
+                        <i class="mdi mdi-cash-multiple"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Net Profit</div>
+                        <div>Tsh.{{ total_profit|floatformat:2|intcomma }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(163, 160, 158);">
+                        <i class="mdi mdi-receipt"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Number of Sales</div>
+                        <div>{{ total_sales_count }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(163, 160, 158);">
+                        <i class="mdi mdi-package-variant"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Products Sold</div>
+                        <div>{{ total_items }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(163, 160, 158);">
+                        <i class="mdi mdi-wallet-outline"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Expenses</div>
+                        <div>Tsh.{{ total_expenses|floatformat:2|intcomma }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SALES TABLE ========== -->
+    <div class="card shadow-sm border-0 shadow-lg" style="background-color: #647688; border-radius: 10px;">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sale ID</th>
+                            <th>Date & Time</th>
+                            <th>Items</th>
+                            <th>Total Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-light">
+                        {% for sale in sales %}
+                        <tr>
+                            <td><strong>{{ sale.id }}</strong></td>
+                            <td>{{ sale.sale_date|date:"d M, Y H:i" }}</td>
+                            <td>{{ sale.items_count }} items</td>
+                            <td class="fw-bold text-success">
+                                Tsh {{ sale.total_amount|intcomma }}
+                            </td>
+                            <td>
+                                <a href="{% url 'sale_detail' sale.id %}"
+                                   class="btn btn-sm btn-outline-primary view-sale"
+                                   data-sale-id="{{ sale.id }}">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                No sales recorded for this period
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                {% if page_obj and page_obj.paginator.num_pages > 1 %}
+                <nav class="mt-4 d-flex justify-content-center">
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?page=1&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}">
+                                    « First
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?page={{ page_obj.previous_page_number }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}">
+                                    ‹ Prev
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?page={{ num }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}">
+                                        {{ num }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?page={{ page_obj.next_page_number }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}">
+                                    Next ›
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?page={{ page_obj.paginator.num_pages }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}">
+                                    Last »
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                <p class="text-center text-light small mt-2">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    ({{ page_obj.paginator.count }} sales total)
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

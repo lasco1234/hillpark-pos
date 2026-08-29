@@ -1,0 +1,120 @@
+{% extends 'settings_layout.html' %}
+{% load static %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-1 fw-bold responsive-title" style="color: #647688;">Settings</h3>
+      <p class="text-muted mb-0">Manage system and store configurations</p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- System Settings (Admin only) -->
+    {% if is_admin %}
+    <div class="col-md-6 col-lg-4" style="background-color: #647688;">
+      <div class="card h-100 shadow-sm border-0" style="background-color: #647688; color: azure;">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3 me-3">
+              <i class="mdi mdi-cog-outline fs-3"></i>
+            </div>
+            <div>
+              <h5 class="mb-0 fw-semibold">System Settings</h5>
+              <small class="text-secondary">Global configuration</small>
+            </div>
+          </div>
+          <p class="text-secondary small mb-4">
+            Company info, currency, tax rate, invoice prefixes, POS behaviour and security.
+          </p>
+          <a href="{% url 'settings:system' %}" class="btn btn-primary w-100">
+            <i class="mdi mdi-arrow-right me-1"></i> Open System Settings
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- My Store Settings -->
+    {% if store_settings %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm border-0" style="background-color: #647688;">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-success bg-opacity-10 text-success rounded-3 p-3 me-3">
+              <i class="mdi mdi-storefront-outline fs-3"></i>
+            </div>
+            <div>
+              <h5 class="mb-0 fw-semibold text-light">{{ request.user.store.name }}</h5>
+              <small class="text-secondary">Store Settings</small>
+            </div>
+          </div>
+          <p class="text-secondary small mb-4">
+            Receipt header/footer, payment methods, stock alerts and notifications.
+          </p>
+          <a href="{% url 'settings:store' %}" class="btn btn-success w-100">
+            <i class="mdi mdi-arrow-right me-1"></i> Open Store Settings
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Admin: Manage other stores -->
+    {% if is_admin %}
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+          <h5 class="mb-0 fw-semibold">
+            <i class="mdi mdi-store-outline me-2"></i> All Store Settings
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Store Name</th>
+                  <th>Status</th>
+                  <th class="text-end pe-4">Action</th>
+                </tr>
+              </thead>
+              <tbody style="background-color: #647688; color: azure;">
+                {% for store in stores %}
+                <tr>
+                  <td class="ps-4 fw-medium">{{ store.name }}</td>
+                  <td>
+                    {% if store.is_active %}
+                      <span class="badge bg-success-subtle text-success">Active</span>
+                    {% else %}
+                      <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end pe-4">
+                    <a href="{% url 'settings:store' store.id %}" class="btn btn-sm btn-outline-primary">
+                      <i class="mdi mdi-pencil-outline me-1"></i> Edit
+                    </a>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-center text-muted py-4">No stores found</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

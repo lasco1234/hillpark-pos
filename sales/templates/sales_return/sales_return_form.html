@@ -1,0 +1,215 @@
+{% extends 'sales_layout.html' %}
+
+
+{% block title %}
+    sales return
+{% endblock title %}
+    
+
+{% block content %}
+<div class="container my-4">
+    <div class="card shadow-sm bg-light" style="border-radius: 15px;">
+        <div class="card-header bg-gray text-dark"
+             style="border-top-left-radius: 15px; border-top-right-radius: 15px;">
+            <h4 class="mb-0" style="color: #647688;">Return Product</h4>
+        </div>
+        <div class="card-body text-black">
+            <form method="POST" id="return-form">
+                {% csrf_token %}
+
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    Please correct the errors below.
+                    {{ form.errors }}
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <!-- Customer Name -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Customer Name</label>
+                        {{ form.customer_name }}
+                        <div class="text-danger">{{ form.customer_name.errors }}</div>
+                    </div>
+
+                    <!-- Searchable Product Sold -->
+                    <div class="col-md-6 mb-3 position-relative">
+                        <label class="form-label">Product Sold</label>
+
+                        <input type="text"
+                               class="form-control"
+                               id="product-search-input"
+                               placeholder="Search sold product, sale # or date..."
+                               autocomplete="off"
+                               style="background-color: #f8f9fa; color: black; border: solid 1px #cad7dd;">
+
+                        <!-- Hidden field that the form actually submits -->
+                        <input type="hidden" name="sale_item" id="selected-sale-item-id"
+                               value="{{ form.sale_item.value|default:'' }}">
+
+                        <!-- Floating dropdown -->
+                        <div id="product-dropdown"
+                             class="position-absolute w-100 bg-dark rounded shadow-lg"
+                             style="z-index: 1050; max-height: 280px; overflow-y: auto; display: none;">
+                        </div>
+
+                        <div class="text-danger">{{ form.sale_item.errors }}</div>
+
+                        <!-- Selected info -->
+                        <div id="selected-info" class="mt-2 small text-muted" style="display:none;">
+                            <span id="info-sale"></span> ·
+                            Remaining: <strong id="info-remaining"></strong> ·
+                            Price: <strong id="info-price"></strong>
+                        </div>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Quantity Returned</label>
+                        {{ form.quantity }}
+                        <div class="text-danger">{{ form.quantity.errors }}</div>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Price</label>
+                        {{ form.price }}
+                        <div class="text-danger">{{ form.price.errors }}</div>
+                    </div>
+
+                    <!-- Reason -->
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Reason for Return</label>
+                        {{ form.reason }}
+                        <div class="text-danger">{{ form.reason.errors }}</div>
+                    </div>
+
+                    <!-- Recommendations -->
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Recommendations</label>
+                        {{ form.recommendations }}
+                        <div class="text-danger">{{ form.recommendations.errors }}</div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'sales_return_list' %}" class="btn btn-secondary">Back</a>
+                    <button type="submit" class="btn btn-success">Save Return</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const soldProducts = {{ sold_products_json|safe }};
+
+const searchInput   = document.getElementById('product-search-input');
+const dropdown      = document.getElementById('product-dropdown');
+const hiddenId      = document.getElementById('selected-sale-item-id');
+const selectedInfo  = document.getElementById('selected-info');
+const infoSale      = document.getElementById('info-sale');
+const infoRemaining = document.getElementById('info-remaining');
+const infoPrice     = document.getElementById('info-price');
+const priceInput    = document.querySelector('[name="price"]');
+const qtyInput      = document.querySelector('[name="quantity"]');
+
+function renderDropdown(items) {
+    if (!items.length) {
+        dropdown.innerHTML = '<div class="p-3 text-muted">No matching sold products</div>';
+        dropdown.style.display = 'block';
+        return;
+    }
+
+    dropdown.innerHTML = items.map(p => `
+        <div class="dropdown-item px-3 py-2 border-bottom"
+             style="cursor:pointer;"
+             data-id="${p.id}"
+             data-name="${p.display_name}"
+             data-remaining="${p.qty_remaining}"
+             data-price="${p.sold_price}"
+             data-sale="${p.sale_id}"
+             data-date="${p.sale_date}">
+            <div class="fw-semibold">${p.display_name}</div>
+            <small class="text-muted">
+                Sale #${p.sale_id} · ${p.sale_date} ·
+                Sold: ${p.qty_sold} · Left: ${p.qty_remaining} ·
+                Tsh ${Number(p.sold_price).toLocaleString()}
+            </small>
+        </div>
+    `).join('');
+
+    dropdown.style.display = 'block';
+
+    dropdown.querySelectorAll('.dropdown-item').forEach(el => {
+        el.addEventListener('click', () => selectProduct(el));
+    });
+}
+
+function selectProduct(el) {
+    const id        = el.dataset.id;
+    const name      = el.dataset.name;
+    const remaining = el.dataset.remaining;
+    const price     = el.dataset.price;
+    const saleId    = el.dataset.sale;
+    const date      = el.dataset.date;
+
+    hiddenId.value = id;
+    searchInput.value = name;
+    dropdown.style.display = 'none';
+
+    // Show helper info
+    infoSale.textContent = `Sale #${saleId} (${date})`;
+    infoRemaining.textContent = remaining;
+    infoPrice.textContent = `Tsh ${Number(price).toLocaleString()}`;
+    selectedInfo.style.display = 'block';
+
+    // Auto-fill price & set max quantity
+    if (priceInput) priceInput.value = price;
+    if (qtyInput) {
+        qtyInput.max = remaining;
+        qtyInput.placeholder = `Max ${remaining}`;
+    }
+}
+
+searchInput.addEventListener('input', function () {
+    const q = this.value.trim().toLowerCase();
+    if (!q) {
+        dropdown.style.display = 'none';
+        hiddenId.value = '';
+        selectedInfo.style.display = 'none';
+        return;
+    }
+
+    const filtered = soldProducts.filter(p =>
+        p.display_name.toLowerCase().includes(q) ||
+        p.product_name.toLowerCase().includes(q) ||
+        String(p.sale_id).includes(q) ||
+        (p.sale_date && p.sale_date.toLowerCase().includes(q))
+    );
+    renderDropdown(filtered.slice(0, 30));   // limit results
+});
+
+searchInput.addEventListener('focus', function () {
+    if (this.value.trim()) {
+        this.dispatchEvent(new Event('input'));
+    }
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function (e) {
+    if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+    }
+});
+
+// Make sure a product is selected before submit
+document.getElementById('return-form').addEventListener('submit', function (e) {
+    if (!hiddenId.value) {
+        e.preventDefault();
+        alert('Please select a sold product from the list.');
+        searchInput.focus();
+    }
+});
+</script>
+{% endblock %}

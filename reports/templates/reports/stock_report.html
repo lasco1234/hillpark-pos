@@ -1,0 +1,160 @@
+{% extends 'reports_layout.html' %}
+{% block title %}Stock Adjustments Report{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="card border-0 shadow-sm" style="background:#fcfdff; border-radius:10px;">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h1 class="mb-1 responsive-title" style="color: #647688;">Stock Adjustments Report</h1>
+                    <p class="text-muted mb-0">
+                        {{ start_date|date:"d M Y" }} → {{ end_date|date:"d M Y" }}
+                    </p>
+                </div>
+                {% if store and data %}
+                <div class="d-flex gap-2">
+                    <a class="btn btn-success"
+                       href="{% url 'reports:export_period' %}?type=stock&format=excel&period={{ period }}&start={{ start_str }}&end={{ end_str }}&store_id={{ store.pk }}">
+                        Excel
+                    </a>
+                    <a class="btn btn-danger"
+                       href="{% url 'reports:export_period' %}?type=stock&format=pdf&period={{ period }}&start={{ start_str }}&end={{ end_str }}&store_id={{ store.pk }}">
+                        PDF
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            {% include 'reports/_period_filter.html' %}
+
+            {% if data %}
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="p-3 rounded-3" style="background:#a6bba8;">
+                        <small class="text-light">Stock In (value)</small>
+                        <h5 class="mb-0">{{ data.total_in|floatformat:0 }} TZS</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded-3" style="background:#beb4a5;">
+                        <small class="text-light">Stock Out (value)</small>
+                        <h5 class="mb-0">{{ data.total_out|floatformat:0 }} TZS</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded-3" style="background:#9eabb4;">
+                        <small class="text-light">Movements</small>
+                        <h5 class="mb-0">{{ data.count }}</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Product</th>
+                            <th>Type</th>
+                            <th>Direction</th>
+                            <th>Qty</th>
+                            <th>Unit Price</th>
+                            <th>Value</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Reason</th>
+                            <th>By</th>
+                        </tr>
+                    </thead>
+                    <tbody style="background-color: #647688; color: #ffffff;">
+                        {% for r in data.rows %}
+                        <tr>
+                            <td>{{ r.adj.adjustment_date|date:"d M Y H:i" }}</td>
+                            <td>{{ r.adj.product }}</td>
+                            <td>{{ r.adj.get_adjustment_type_display }}</td>
+                            <td>
+                                <span class="badge {% if 'IN' in r.direction %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ r.direction }}
+                                </span>
+                            </td>
+                            <td class="text-end">{{ r.qty|floatformat:0 }}</td>
+                            <td class="text-end">{{ r.unit|floatformat:0 }}</td>
+                            <td class="text-end">{{ r.value|floatformat:0 }}</td>
+                            <td>{{ r.adj.from_store.name|default:"—" }}</td>
+                            <td>{{ r.adj.to_store.name|default:"—" }}</td>
+                            <td>{{ r.adj.reason|default:"" }}</td>
+                            <td>{{ r.adj.adjusted_by|default:"" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="11" class="text-center text-white">No stock adjustments in this period</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj and page_obj.paginator.num_pages > 1 %}
+            <nav class="mt-4 d-flex justify-content-center">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page=1&period={{ period }}&start={{ start_str }}&end={{ end_str }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                            « First
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.previous_page_number }}&period={{ period }}&start={{ start_str }}&end={{ end_str }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                            ‹ Prev
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?page={{ num }}&period={{ period }}&start={{ start_str }}&end={{ end_str }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.next_page_number }}&period={{ period }}&start={{ start_str }}&end={{ end_str }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                            Next ›
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.paginator.num_pages }}&period={{ period }}&start={{ start_str }}&end={{ end_str }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                            Last »
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            <p class="text-center text-muted small mt-2">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                ({{ page_obj.paginator.count }} entries)
+            </p>
+            {% endif %}
+
+            {% else %}
+            <div class="alert alert-info">Select a store to view stock adjustments.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

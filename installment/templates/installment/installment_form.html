@@ -1,0 +1,359 @@
+{% extends 'installment_layout.html' %}
+{% block title %}New Installment{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 1100px;">
+
+    <div class="mb-4">
+        <h1 class="responsive-title" style="color: #647688;">New Installment</h1>
+        <p class="text-muted">Create a new installment agreement</p>
+    </div>
+
+    <form method="post" id="installment-form">
+        {% csrf_token %}
+
+        <!-- Customer Information -->
+        <div class="card border-0 shadow-sm mb-4" style="background:#647688;">
+            <div class="card-body p-4">
+                <h5 class="mb-3" style="color: #647688;">Customer Information</h5>
+
+                <div class="row g-3">
+                    {% if stores|length > 1 %}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Shop <span class="text-danger">*</span></label>
+                        <select name="store_id" id="store-select" class="form-select" required >
+                            <option value="">Select Shop</option>
+                            {% for s in stores %}
+                            <option value="{{ s.pk }}">{{ s.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% else %}
+                        <input type="hidden" name="store_id" id="store-select" value="{{ stores.first.pk }}">
+                    {% endif %}
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Customer Name <span class="text-danger">*</span></label>
+                        {{ form.customer_name }}
+                        {% if form.customer_name.errors %}
+                            <div class="text-danger small">{{ form.customer_name.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Phone <span class="text-danger">*</span></label>
+                        {{ form.customer_phone }}
+                        {% if form.customer_phone.errors %}
+                            <div class="text-danger small">{{ form.customer_phone.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Email</label>
+                        {{ form.customer_email }}
+                        {% if form.customer_email.errors %}
+                            <div class="text-danger small">{{ form.customer_email.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Address</label>
+                        {{ form.customer_address }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <div>
+                            <label class="form-label fw-semibold">Duration Type <span class="text-danger">*</span></label>
+                            {{ form.duration_type }}
+                        </div>
+
+                        <div>
+                            <label class="form-label fw-semibold">Duration <span class="text-danger">*</span></label>
+                            {{ form.duration_value }}
+                            <div class="form-text text-muted small">Number of days / weeks / months</div>
+                        </div>
+
+                        <div>
+                            <label class="form-label fw-semibold">Calculated Due Date</label>
+                            <input type="text" id="calculated-due-date" class="form-control" readonly
+                                style="background-color: #414344; color: #f8f9fa;" placeholder="Will appear automatically">
+                        </div>
+                    </div>
+
+                    
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Section -->
+        <div class="card border-0 shadow-sm mb-4" style="background:#647688;">
+            <div class="card-body p-4">
+                <h5 class="mb-3" style="color: #647688;">Products</h5>
+
+                <!-- Searchable Product Selector -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-5 position-relative">
+                        <label class="form-label fw-semibold">Search Product</label>
+                        <input type="text"
+                               class="form-control"
+                               id="product-search-input"
+                               placeholder="Search product, group or variant..."
+                               autocomplete="off"
+                               style="background-color: #f8f9fa; color: black;">
+                        <input type="hidden" id="selected-product-id">
+
+                        <div id="product-dropdown"
+                             class="position-absolute w-100 bg-dark border rounded shadow-lg"
+                             style="z-index: 1050; max-height: 280px; overflow-y: auto; display: none;">
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Quantity</label>
+                        <input type="number" id="quantity-input" class="form-control text-white" value="1" min="1">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Unit Price (TZS)</label>
+                        <input type="number" id="price-input" class="form-control text-white" step="0.01" min="0">
+                    </div>
+
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary w-100" onclick="addProductToList()">
+                            + Add
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Selected Products -->
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th width="100">Qty</th>
+                                <th width="140">Unit Price</th>
+                                <th width="140">Subtotal</th>
+                                <th width="80"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="selected-products-body" class="text-white"></tbody>
+                    </table>
+                </div>
+                <div id="no-products-msg" class="text-white text-center py-3">
+                    No products added yet
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{% url 'installment:installment_list' %}" class="btn btn-light border">Cancel</a>
+            <button type="submit" class="btn text-white px-4" style="background:#647688;">
+                Create Installment
+            </button>
+        </div>
+    </form>
+</div>
+
+{{ products|json_script:"products-data" }}
+
+<script>
+const allProducts = JSON.parse(document.getElementById('products-data').textContent);
+let currentStoreId = document.getElementById('store-select')?.value || null;
+let filteredProducts = [];
+let selectedItems = [];
+
+function updateDueDatePreview() {
+    const type = document.getElementById('id_duration_type').value;
+    const value = parseInt(document.getElementById('id_duration_value').value) || 0;
+    const preview = document.getElementById('calculated-due-date');
+
+    if (value < 1) {
+        preview.value = '';
+        return;
+    }
+
+    const today = new Date();
+    let due = new Date(today);
+
+    if (type === 'days') {
+        due.setDate(today.getDate() + value);
+    } else if (type === 'weeks') {
+        due.setDate(today.getDate() + (value * 7));
+    } else if (type === 'months') {
+        due.setMonth(today.getMonth() + value);
+    }
+
+    // Format as YYYY-MM-DD or nice format
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    preview.value = due.toLocaleDateString('en-GB', options);
+}
+
+document.getElementById('id_duration_type').addEventListener('change', updateDueDatePreview);
+document.getElementById('id_duration_value').addEventListener('input', updateDueDatePreview);
+
+// Run once on load
+document.addEventListener('DOMContentLoaded', updateDueDatePreview);
+
+function filterProducts(searchTerm = '') {
+    if (!currentStoreId) {
+        filteredProducts = [];
+        renderDropdown();
+        return;
+    }
+
+    let list = allProducts.filter(p => p.store_id == currentStoreId);
+
+    if (searchTerm) {
+        const q = searchTerm.toLowerCase();
+        list = list.filter(p =>
+            p.display_name.toLowerCase().includes(q) ||
+            p.product_name.toLowerCase().includes(q) ||
+            (p.product_group && p.product_group.toLowerCase().includes(q)) ||
+            (p.variant && p.variant.toLowerCase().includes(q))
+        );
+    }
+    filteredProducts = list;
+    renderDropdown();
+}
+
+function renderDropdown() {
+    const dropdown = document.getElementById('product-dropdown');
+    dropdown.innerHTML = '';
+
+    if (filteredProducts.length === 0) {
+        dropdown.innerHTML = `<div class="p-3 text-muted text-center">No products found</div>`;
+        dropdown.style.display = 'block';
+        return;
+    }
+
+    filteredProducts.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'dropdown-item px-3 py-2';
+        item.style.cursor = 'pointer';
+        item.innerHTML = `
+            <div class="fw-semibold">${p.display_name}</div>
+            <small class="text-muted">${p.unit_type || '-'} • ${parseFloat(p.sell_price).toLocaleString()} TZS</small>
+        `;
+        item.addEventListener('click', () => selectProduct(p));
+        item.addEventListener('mouseenter', () => item.style.backgroundColor = '#f1f3f5');
+        item.addEventListener('mouseleave', () => item.style.backgroundColor = '');
+        dropdown.appendChild(item);
+    });
+    dropdown.style.display = 'block';
+}
+
+function selectProduct(p) {
+    document.getElementById('product-search-input').value = p.display_name;
+    document.getElementById('selected-product-id').value = p.id;
+    document.getElementById('price-input').value = parseFloat(p.sell_price).toFixed(2);
+    document.getElementById('product-dropdown').style.display = 'none';
+}
+
+function addProductToList() {
+    const productId = document.getElementById('selected-product-id').value;
+    const qty = parseInt(document.getElementById('quantity-input').value) || 1;
+    const price = parseFloat(document.getElementById('price-input').value) || 0;
+
+    if (!productId) return alert('Please select a product');
+    if (qty < 1) return alert('Quantity must be at least 1');
+    if (price <= 0) return alert('Price must be greater than 0');
+
+    const product = allProducts.find(p => p.id == productId);
+    if (!product) return alert('Product not found');
+
+    if (selectedItems.some(i => i.product_id == productId)) {
+        return alert('This product is already added');
+    }
+
+    selectedItems.push({
+        product_id: product.id,
+        name: product.display_name,
+        quantity: qty,
+        unit_price: price,
+        subtotal: qty * price
+    });
+
+    renderSelectedProducts();
+    clearProductInputs();
+}
+
+function renderSelectedProducts() {
+    const tbody = document.getElementById('selected-products-body');
+    const msg = document.getElementById('no-products-msg');
+    tbody.innerHTML = '';
+
+    if (selectedItems.length === 0) {
+        msg.style.display = 'block';
+        return;
+    }
+    msg.style.display = 'none';
+
+    selectedItems.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                ${item.name}
+                <input type="hidden" name="product_id" value="${item.product_id}">
+            </td>
+            <td>
+                ${item.quantity}
+                <input type="hidden" name="quantity" value="${item.quantity}">
+            </td>
+            <td class="text-end">
+                ${item.unit_price.toLocaleString()}
+                <input type="hidden" name="unit_price" value="${item.unit_price}">
+            </td>
+            <td class="text-end">${item.subtotal.toLocaleString()}</td>
+            <td class="text-end">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(${index})">✕</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function removeItem(index) {
+    selectedItems.splice(index, 1);
+    renderSelectedProducts();
+}
+
+function clearProductInputs() {
+    document.getElementById('product-search-input').value = '';
+    document.getElementById('selected-product-id').value = '';
+    document.getElementById('quantity-input').value = 1;
+    document.getElementById('price-input').value = '';
+}
+
+// Events
+document.getElementById('store-select')?.addEventListener('change', function () {
+    currentStoreId = this.value;
+    clearProductInputs();
+    filterProducts();
+});
+
+document.getElementById('product-search-input').addEventListener('input', function () {
+    filterProducts(this.value.trim());
+});
+
+document.getElementById('product-search-input').addEventListener('focus', function () {
+    filterProducts(this.value.trim());
+});
+
+document.addEventListener('click', function (e) {
+    const wrapper = document.querySelector('.position-relative');
+    if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('product-dropdown').style.display = 'none';
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (currentStoreId) filterProducts();
+});
+</script>
+{% endblock %}

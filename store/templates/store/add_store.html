@@ -1,0 +1,89 @@
+{% extends 'store_layout.html' %}
+{% block title %}Add New Store{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card border-0 text-black" style="background-color: rgb(239, 243, 243);">
+        <div class="p-3">
+            <h1 class="responsive-title" style="color: #647688;">Add New Store</h1>
+            <p class="text-muted">Create a new store location for your business</p>
+        </div>
+
+        <form id="store-form" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Show General Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mx-3" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger mx-3">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="card-body p-4 shadow-lg border-0" 
+                 style="background-color: rgb(252, 253, 255); border-radius: 10px;">
+
+                <!-- STORE NAME -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Store Name <span class="text-danger">*</span></label>
+                    {{ form.name }}
+                    <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+                </div>
+
+                <!-- LOCATION -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Location <span class="text-danger">*</span></label>
+                    {{ form.location }}
+                    <div class="text-danger small mt-1">{{ form.location.errors }}</div>
+                </div>
+
+                <!-- ADDRESS -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Full Address <span class="text-danger">*</span></label>
+                    {{ form.address }}
+                    <div class="text-danger small mt-1">{{ form.address.errors }}</div>
+                </div>
+
+                <!-- CONTACT -->
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                        {{ form.phone }}
+                        <div class="text-danger small mt-1">{{ form.phone.errors }}</div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                        {{ form.email }}
+                        <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                    </div>
+                </div>
+
+                <!-- ACTIVE STATUS -->
+                <div class="mb-4 form-check">
+                    {{ form.is_active }}
+                    <label class="form-check-label fw-semibold" for="{{ form.is_active.id_for_label }}">
+                        This store is active
+                    </label>
+                </div>
+
+                <!-- BUTTONS -->
+                <div class="d-flex justify-content-end gap-3 mt-4">
+                    <a href="{% url 'store_list' %}" class="btn btn-light border rounded-3 px-4">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn text-white rounded-3 px-4" 
+                            style="background-color: #647688;">
+                        Create Store
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

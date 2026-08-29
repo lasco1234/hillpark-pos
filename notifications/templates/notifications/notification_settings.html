@@ -1,0 +1,144 @@
+{% extends 'settings_layout.html' %}
+{% load static %}
+
+{% load notifications_extras %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="page-header">
+    <h3 class="page-title" style="color: #647688;">Notification Settings</h3>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard_main' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'all_notifications' %}">Notifications</a></li>
+        <li class="breadcrumb-item active">Settings</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="row">
+    <div class="col-12 grid-margin stretch-card">
+      <div class="card"  style="background-color: #647688;">
+        <div class="card-body">
+          <h4 class="card-title mb-4">
+            Notification Preferences
+            <small class="text-muted d-block mt-1" style="font-size: 0.8rem;">
+              {% if is_admin and target_user != request.user %}
+                Configuring for: <strong>{{ target_user.username }}</strong>
+              {% else %}
+                Toggle which notifications you want to receive
+              {% endif %}
+            </small>
+          </h4>
+
+          {% if is_admin %}
+          <div class="mb-4">
+            <label class="mr-2">Switch user:</label>
+            <select id="userSwitcher" class="form-control form-control-sm d-inline-block bg-light" style="width: auto;" onchange="location = '?user_id=' + this.value;">
+              <option value="{{ request.user.id }}" {% if target_user == request.user %}selected{% endif %}>Me ({{ request.user.username }})</option>
+              {% for u in all_users %}
+                {% if u.id != request.user.id %}
+                <option value="{{ u.id }}" {% if target_user == u %}selected{% endif %}>{{ u.username }} ({{ u.get_role_display }})</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
+          <form method="POST">
+            {% csrf_token %}
+
+            {% for category, fields in categories.items %}
+            <div class="mb-4">
+              <h5 class="text-primary mb-3" style="border-bottom: 1px solid #dee2e6; padding-bottom: 8px;">
+                {{ category }}
+              </h5>
+              <div class="row">
+                {% for field in fields %}
+                <div class="col-md-6 mb-3">
+                  <div class="d-flex justify-content-between align-items-center p-3 border rounded">
+                    <div>
+                      <strong>{{ field|title|cut:"_" }}</strong>
+                      {% for key, label in labels.items %}
+                        {% if key == field %}
+                          <br><small class="text-muted">{{ label }}</small>
+                        {% endif %}
+                      {% endfor %}
+                    </div>
+                    <div class="form-check form-switch">
+                      <label class="switch">
+                        <input type="checkbox"
+                               name="{{ field }}"
+                               {% if pref|get_field:field %}checked{% endif %}>
+                        <span class="slider round"></span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endfor %}
+
+            <div class="mt-4">
+              <button type="submit" class="btn btn-primary mr-2">
+                <i class="mdi mdi-content-save"></i> Save Preferences
+              </button>
+              <a href="{% url 'all_notifications' %}" class="btn btn-outline-secondary">
+                Cancel
+              </a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Toggle switch */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+  }
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+  }
+  input:checked + .slider {
+    background-color: #4B49AC;
+  }
+  input:checked + .slider:before {
+    transform: translateX(24px);
+  }
+  .slider.round {
+    border-radius: 26px;
+  }
+  .slider.round:before {
+    border-radius: 50%;
+  }
+</style>
+{% endblock %}

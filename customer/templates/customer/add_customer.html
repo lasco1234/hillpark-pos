@@ -1,0 +1,81 @@
+{% extends 'customer_layout.html' %}
+
+{% block title %}
+Add Customer
+{% endblock title %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Dashboard Statistics Cards -->
+    <div class="card bg-light text-dark mt-4 shadow-sm" style="border-radius: 15px;">
+        <div class="card-body row">
+
+            <div class="col-md-3 col-sm-6">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3">
+                        <i class="mdi mdi-chair-school"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Total Customer</div>
+                        <div>{{ total_customers }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3">
+                        <i class="mdi mdi-office-building"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Company Customers</div>
+                        <div>{{ company_customers }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(211, 86, 3);">
+                        <i class="mdi mdi-account-group"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Group Customer</div>
+                        <div>{{ group_customers }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(30, 77, 30);">
+                        <i class="mdi mdi-seat-individual-suite"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Individual Customer</div>
+                        <div>{{ individual_customers }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(102, 11, 33);">
+                        <i class="mdi mdi-school"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>School Customer</div>
+                        <div>{{ school_customers }}</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Add Customer Form -->
+    {% include 'customer/form.html' %}
+
+</div>
+{% endblock content %}

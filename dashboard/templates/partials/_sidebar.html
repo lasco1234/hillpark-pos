@@ -1,0 +1,42 @@
+{% load static %}
+
+<nav class="sidebar sidebar-offcanvas" id="sidebar">
+  <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top">
+  <a class="sidebar-brand brand-logo" href="{% url 'home' %}">
+    <img src="{% static 'dashboard/images/logo.png' %}" alt="logo" />
+  </a>
+  <a class="sidebar-brand brand-logo-mini" href="{% url 'home' %}">
+    <img src="{% static 'dashboard/images/logo-mini.svg' %}" alt="logo" />
+  </a>
+</div>
+  <ul class="nav">
+    
+    <li class="nav-item nav-category">
+      <span class="nav-link">Navigation</span>
+    </li>
+     <li class="nav-item menu-items mb-2">
+      <a class="nav-link" href="{% url 'home' %}">
+        <span class="menu-icon">
+          <i class="mdi mdi-home"></i>
+        </span>
+        <span class="menu-title">Home</span>
+      </a>
+    </li>
+    <li class="nav-item menu-items mb-2">
+      <a class="nav-link" href="{% url 'dashboard_main' %}">
+        <span class="menu-icon">
+          <i class="mdi mdi-speedometer"></i>
+        </span>
+        <span class="menu-title">Dashboard</span>
+      </a>
+    </li>
+    <li class="nav-item menu-items mb-2">
+      <a class="nav-link" href="#">
+        <span class="menu-icon">
+          <i class="mdi mdi-file-document-box"></i>
+        </span>
+        <span class="menu-title">Documentation</span>
+      </a>
+    </li>
+  </ul>
+</nav>

@@ -1,0 +1,375 @@
+<!-- Search Box (full width on mobile) -->
+                <form method="get" class="d-flex flex-grow-1" style="max-width: 420px;">
+                    <input type="hidden" name="filter" value="{{ current_filter }}">
+                    <div class="input-group input-group-sm">
+                        <input type="text"
+                            name="search"
+                            value="{{ search_query }}"
+                            class="form-control"
+                            placeholder="Search products by name, category..."
+                            style="border-radius: 50px 0 0 50px; background-color: #ffffff; border: 1px solid #84888d; color: black;">
+                        <button type="submit" class="btn btn-dark px-3" style="border-radius: 0 50px 50px 0; background-color: #647688; border: none;">
+                            Search
+                        </button>
+                    </div>
+                    {% if search_query %}
+                        <a href="?filter={{ current_filter }}"
+                        class="btn btn-sm mx-2 rounded-pill d-none d-md-inline-flex align-items-center" style="border: 1px solid #909296; background-color: transparent; color: #0d6efd; padding: 8px 16px; border-radius: 5px; transition: 0.2s;" onmouseover="this.style.backgroundColor='#0d6efd'; this.style.color='white';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#0d6efd';">
+                            Clear
+                        </a>
+                    {% endif %}
+                </form>
+            </div>
+
+            <!-- Clear button only on mobile when searching -->
+            {% if search_query %}
+                <div class="mt-2 d-md-none">
+                    <a href="?filter={{ current_filter }}" class="btn btn-sm btn-outline-secondary rounded-pill w-100">
+                        Clear Search
+                    </a>
+                </div>
+            {% endif %}
+
+
+
+{% extends 'store_layout.html' %}
+{% block title %}Stock Adjustment{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="mb-4" style="color: #647688;">Stock Adjustment</h1>
+
+    <!-- Tabs: only Increase & Decrease -->
+    <div class="btn-group mb-4" role="group">
+        <button class="btn btn-primary active px-4 py-2" id="increase-tab">
+            <i class="fas fa-arrow-up me-2"></i>Increase Stock
+        </button>
+        <button class="btn btn-outline-primary px-4 py-2" id="decrease-tab">
+            <i class="fas fa-arrow-down me-2"></i>Decrease Stock
+        </button>
+    </div>
+
+    <div class="row">
+        <!-- Left Panel: Form -->
+        <div class="col-lg-5 col-xl-4">
+            <div class="card adjustment-card h-100" style="background-color: #647688; border: none;" >
+                <div class="card-header bg-white border-0 pt-4">
+                    <h4 class="mb-0 text-dark" id="page-title">Increase Stock</h4>
+                    <p class="text-muted small mb-0" id="page-subtitle">Add stock to a store</p>
+                </div>
+                <div class="card-body">
+
+                    <!-- Store Selection -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Store</label>
+                        <select class="form-select" id="store-select">
+                            <option value="">Select Store</option>
+                        </select>
+                    </div>
+
+                    <!-- Product Selection -->
+                    <div class="mb-4">
+                        <h6 class="fw-semibold mb-3">PRODUCT</h6>
+                        <select class="form-select mb-3" id="product-select">
+                            <option value="">Select Product</option>
+                        </select>
+
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="form-label">Unit</label>
+                                <input type="text" class="form-control" id="unit-display" readonly style="color: black;">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="quantity-input" 
+                                       min="1" placeholder="Enter quantity" style="background-color: rgb(231, 235, 235); color: black;">
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label">Unit Price (editable)</label>
+                            <input type="number" class="form-control" id="price-input" 
+                                   step="0.01" min="0" style="background-color: rgb(231, 235, 235); color: black;">
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-success flex-grow-1" onclick="addToQueue()">
+                            <i class="fas fa-plus me-2"></i>Add to Queue
+                        </button>
+                        <button class="btn btn-outline-danger text-white" onclick="clearForm()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Queue -->
+        <div class="col-lg-7 col-xl-8">
+            <div class="card adjustment-card h-100" style="background-color: #647688; border: none;">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0 text-dark">Adjustment Queue</h5>
+                        <small class="text-muted" id="queue-count">0 items pending</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary text-muted" onclick="clearQueue()">
+                        <i class="fas fa-trash me-1"></i> Clear All
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>PRODUCT</th>
+                                    <th>STORE</th>
+                                    <th>QUANTITY</th>
+                                    <th>UNIT</th>
+                                    <th>PRICE</th>
+                                    <th>TYPE</th>
+                                    <th class="text-end">ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queue-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="empty-state" class="text-center py-5">
+                        <i class="fas fa-box-open fa-3x mb-3 text-muted"></i>
+                        <p class="mb-1 fw-medium">No adjustments added yet</p>
+                    </div>
+                </div>
+                <div class="card-footer" style="background-color: #b3b3b3;">
+                    <div class="d-flex gap-3">
+                        <button class="btn btn-secondary flex-grow-1" onclick="clearQueue()">Cancel</button>
+                        <button class="btn btn-success flex-grow-1" onclick="saveAdjustments()">
+                            <i class="fas fa-save me-2"></i>Save Adjustments
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 1. First put the data -->
+{{ stores|json_script:"stores-data" }}
+{{ products|json_script:"products-data" }}
+
+<!-- 2. Then the JavaScript -->
+<script>
+    // Data from Django view
+    const stores = JSON.parse(document.getElementById('stores-data').textContent);
+    const allProducts = JSON.parse(document.getElementById('products-data').textContent);
+
+    let currentType = 'increase';
+    let queue = [];
+
+    // ========== Populate Stores ==========
+    function populateStores() {
+        const select = document.getElementById('store-select');
+        select.innerHTML = '<option value="">Select Store</option>';
+        stores.forEach(store => {
+            const opt = document.createElement('option');
+            opt.value = store.id;
+            opt.textContent = store.name;
+            select.appendChild(opt);
+        });
+    }
+
+    // ========== Populate Products ==========
+    function populateProducts(storeId) {
+        const select = document.getElementById('product-select');
+        select.innerHTML = '<option value="">Select Product</option>';
+        if (!storeId) return;
+
+        const filtered = allProducts.filter(p => p.store_id == storeId);
+        filtered.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.product_name;
+            opt.dataset.unit = p.unit_type;
+            opt.dataset.price = p.sell_price;
+            select.appendChild(opt);
+        });
+    }
+
+    // When store changes
+    document.getElementById('store-select').addEventListener('change', function () {
+        populateProducts(this.value);
+        clearProductFields();
+    });
+
+    // When product changes
+    document.getElementById('product-select').addEventListener('change', function () {
+        const opt = this.options[this.selectedIndex];
+        document.getElementById('unit-display').value = opt.dataset.unit || '';
+        document.getElementById('price-input').value = opt.dataset.price
+            ? parseFloat(opt.dataset.price).toFixed(2)
+            : '';
+    });
+
+    // ========== Queue Operations ==========
+    function addToQueue() {
+        const storeSelect = document.getElementById('store-select');
+        const productSelect = document.getElementById('product-select');
+
+        if (!storeSelect.value) return alert('Please select a store');
+        if (!productSelect.value) return alert('Please select a product');
+
+        const quantity = parseInt(document.getElementById('quantity-input').value);
+        if (!quantity || quantity < 1) return alert('Please enter a valid quantity');
+
+        const productId = parseInt(productSelect.value);
+        const product = allProducts.find(p => p.id === productId);
+        const price = parseFloat(document.getElementById('price-input').value) || product.sell_price;
+        const storeName = storeSelect.options[storeSelect.selectedIndex].text;
+
+        queue.push({
+            id: Date.now(),
+            product_id: product.id,
+            product_name: product.product_name,
+            store_id: storeSelect.value,
+            store_name: storeName,
+            quantity: quantity,
+            unit: product.unit_type,
+            price: price,
+            type: currentType
+        });
+
+        renderQueue();
+        clearForm();
+    }
+
+    function renderQueue() {
+        const tbody = document.getElementById('queue-body');
+        const emptyState = document.getElementById('empty-state');
+        const countEl = document.getElementById('queue-count');
+
+        tbody.innerHTML = '';
+
+        if (queue.length === 0) {
+            emptyState.style.display = 'block';
+            countEl.textContent = '0 items pending';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        countEl.textContent = `${queue.length} item(s) pending`;
+
+        queue.forEach(item => {
+            const badgeClass = item.type === 'increase' ? 'bg-success' : 'bg-danger';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${item.product_name}</strong></td>
+                <td>${item.store_name}</td>
+                <td><span class="badge ${badgeClass}">${item.quantity}</span></td>
+                <td>${item.unit}</td>
+                <td>${parseFloat(item.price).toFixed(2)}</td>
+                <td><span class="badge bg-primary">${item.type.toUpperCase()}</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeFromQueue(${item.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function removeFromQueue(id) {
+        queue = queue.filter(item => item.id !== id);
+        renderQueue();
+    }
+
+    function clearForm() {
+        document.getElementById('product-select').value = '';
+        document.getElementById('quantity-input').value = '';
+        document.getElementById('price-input').value = '';
+        document.getElementById('unit-display').value = '';
+    }
+
+    function clearProductFields() {
+        document.getElementById('product-select').value = '';
+        document.getElementById('unit-display').value = '';
+        document.getElementById('price-input').value = '';
+        document.getElementById('quantity-input').value = '';
+    }
+
+    function clearQueue() {
+        if (queue.length && !confirm('Clear all pending adjustments?')) return;
+        queue = [];
+        renderQueue();
+    }
+
+    async function saveAdjustments() {
+        if (queue.length === 0) {
+            return alert('No adjustments to save');
+        }
+
+        // Prepare data to send
+        const payload = queue.map(item => ({
+            product_id: item.product_id,
+            store_id: item.store_id,
+            quantity: item.quantity,
+            price: item.price,
+            type: item.type,
+            reason: ''
+        }));
+
+        try {
+            const response = await fetch("{% url 'save_stock_adjustments' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(result.message);
+                queue = [];
+                renderQueue();
+            } else {
+                alert('Error: ' + (result.error || 'Something went wrong'));
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Network error. Please try again.');
+        }
+    }
+
+    // ========== Tab Switching ==========
+    function switchTab(type) {
+        currentType = type;
+
+        document.querySelectorAll('.btn-group button').forEach(btn => {
+            btn.classList.remove('active', 'btn-primary');
+            btn.classList.add('btn-outline-primary');
+        });
+        document.getElementById(type + '-tab').classList.add('active', 'btn-primary');
+
+        const title = document.getElementById('page-title');
+        const subtitle = document.getElementById('page-subtitle');
+        if (type === 'increase') {
+            title.textContent = 'Increase Stock';
+            subtitle.textContent = 'Add stock to a store';
+        } else {
+            title.textContent = 'Decrease Stock';
+            subtitle.textContent = 'Remove stock from a store';
+        }
+    }
+
+    // ========== Initialize ==========
+    document.addEventListener('DOMContentLoaded', function () {
+        populateStores();
+        document.getElementById('increase-tab').addEventListener('click', () => switchTab('increase'));
+        document.getElementById('decrease-tab').addEventListener('click', () => switchTab('decrease'));
+    });
+</script>
+{% endblock %}
+

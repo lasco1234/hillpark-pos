@@ -1,0 +1,223 @@
+{% extends 'settings_layout.html' %}
+{% load static %}
+
+{% block title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+          <li class="breadcrumb-item"><a href="{% url 'settings:home' %}">Settings</a></li>
+          <li class="breadcrumb-item active">System Settings</li>
+        </ol>
+      </nav>
+      <h3 class="mb-0 fw-bold responsive-title" style="color: #647688;">System Settings</h3>
+    </div>
+    <a href="{% url 'settings:home' %}" class="btn btn-outline-secondary">
+      <i class="mdi mdi-arrow-left me-1"></i> Back
+    </a>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    <div class="row g-4">
+
+      <!-- Company Info -->
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-semibold" style="color: #647688;"><i class="mdi mdi-office-building-outline me-2" style="color: #647688;"></i>Company Information</h5>
+          </div>
+          <div class="card-body" style="background-color: #647688;">
+            <div class="mb-3">
+              <label class="form-label">Company Name</label>
+              {{ form.company_name }}
+              {% if form.company_name.errors %}<div class="text-danger small">{{ form.company_name.errors }}</div>{% endif %}
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Phone</label>
+                {{ form.company_phone }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Email</label>
+                {{ form.company_email }}
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Address</label>
+              {{ form.company_address }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">TIN / Tax Number</label>
+              {{ form.company_tin }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Company Logo</label>
+              {{ form.company_logo }}
+              {% if settings.company_logo %}
+                <div class="mt-2">
+                  <img src="{{ settings.company_logo.url }}" alt="Logo" style="max-height: 60px;" class="rounded border">
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Currency & Tax -->
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-semibold" style="color: #647688;"><i class="mdi mdi-currency-usd me-2" style="color: #647688;"></i>Currency & Tax</h5>
+          </div>
+          <div class="card-body" style="background-color: #647688;">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Currency Code</label>
+                {{ form.currency }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Currency Symbol</label>
+                {{ form.currency_symbol }}
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Default Tax (%)</label>
+              {{ form.default_tax_percent }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POS Behaviour -->
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-semibold" style="color: #647688;"><i class="mdi mdi-point-of-sale me-2"></i>POS Behaviour</h5>
+          </div>
+          <div class="card-body" style="background-color: #647688;">
+            <div class="form-check form-switch mb-3">
+              {{ form.allow_negative_stock }}
+              <label class="form-check-label text-secondary" for="{{ form.allow_negative_stock.id_for_label }}">
+                Allow Negative Stock
+              </label>
+            </div>
+            <div class="form-check form-switch mb-3">
+              {{ form.require_customer_on_sale }}
+              <label class="form-check-label text-secondary" for="{{ form.require_customer_on_sale.id_for_label }}">
+                Require Customer on Sale
+              </label>
+            </div>
+            <div class="form-check form-switch mb-3">
+              {{ form.auto_print_receipt }}
+              <label class="form-check-label text-secondary" for="{{ form.auto_print_receipt.id_for_label }}">
+                Auto Print Receipt
+              </label>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Default Low Stock Threshold</label>
+              {{ form.low_stock_threshold }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invoice Defaults -->
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-semibold" style="color: #647688;"><i class="mdi mdi-file-document-outline me-2"></i>Invoice Defaults</h5>
+          </div>
+          <div class="card-body" style="background-color: #647688;">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Invoice Prefix</label>
+                {{ form.invoice_prefix }}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Proforma Prefix</label>
+                {{ form.proforma_prefix }}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Delivery Prefix</label>
+                {{ form.delivery_prefix }}
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Default Terms & Conditions</label>
+              {{ form.default_invoice_terms }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Default Bank Account Details</label>
+              {{ form.default_bank_account }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security -->
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-semibold" style="color: #647688;"><i class="mdi mdi-shield-lock-outline me-2"></i>Security</h5>
+          </div>
+          <div class="card-body" style="background-color: #647688;">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Session Timeout (minutes)</label>
+                {{ form.session_timeout_minutes }}
+              </div>
+              <div class="col-md-4 mb-3 d-flex align-items-end">
+                <div class="form-check form-switch">
+                  {{ form.enable_audit_log }}
+                  <label class="form-check-label text-secondary" for="{{ form.enable_audit_log.id_for_label }}">
+                    Enable Audit Log
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Save Button -->
+    <div class="mt-4 d-flex justify-content-end gap-2">
+      <a href="{% url 'settings:home' %}" class="btn btn-light">Cancel</a>
+      <button type="submit" class="btn btn-primary px-4">
+        <i class="mdi mdi-content-save-outline me-1"></i> Save System Settings
+      </button>
+    </div>
+  </form>
+</div>
+
+<style>
+  /* Make Django form fields look like Bootstrap */
+  input[type="text"], input[type="email"], input[type="number"], 
+  input[type="url"], textarea, select {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    transition: border-color 0.15s;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+  .form-check-input {
+    width: 2.5em;
+    height: 1.3em;
+  }
+</style>
+{% endblock %}

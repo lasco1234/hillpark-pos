@@ -1,0 +1,145 @@
+{% extends 'store_layout.html' %}
+
+{% load static %}
+
+{% block title %}
+Product Details
+{% endblock title %}
+
+{% block content %}
+
+<div class="container-fluid py-4 px-5">
+
+    <div class="card border-0 shadow-lg text-white" style="background-color: #647688;">
+
+        <div class="card-body">
+
+            <!-- HEADER -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold text-wrap mb-1" style="word-break: break-word;">{{ product.product_name }}</h2>
+                    <p class="text-light mb-0">Product details information</p>
+                </div>
+
+                <a href="{% url 'product_list' %}" class="btn btn-dark">
+                    ← Back to List
+                </a>
+            </div>
+
+            <div class="row">
+
+                <!-- IMAGE SECTION -->
+                <div class="col-md-4 text-center mb-3">
+                    {% if product.product_image %}
+                        <img src="{{ product.product_image.url }}"
+                             class="img-fluid rounded shadow"
+                             style="max-height: 300px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light text-dark d-flex justify-content-center align-items-center rounded"
+                             style="height: 300px;">
+                            No Image Available
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- DETAILS SECTION -->
+                <div class="col-md-8">
+
+                    <div class="card border-0 shadow-sm text-dark">
+                        <div class="card-body text-light">
+
+                            <h5 class="mb-3">Product Information</h5>
+
+                            <p><strong>Name:</strong> {{ product.product_name }}</p>
+
+                            <p><strong>Category:</strong> {{ product.category }}</p>
+
+                            <p><strong>Description:</strong><br>
+                                {{ product.description }}
+                            </p>
+
+                            <hr>
+
+                            <div class="row">
+
+                                <div class="col-md-6">
+                                    <p><strong>Buy Price:</strong> {{ product.buy_price }}</p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <p><strong>Sell Price:</strong> {{ product.sell_price }}</p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <p><strong>Whole Price:</strong> {{ product.wholesale_price }}</p>
+                                </div>
+
+
+                                <div class="col-md-6">
+                                    <p><strong>Stock:</strong> {{ product.initial_stock }}</p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <p><strong>Reorder Level:</strong> {{ product.reorder_level }}</p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <p><strong>Unit Type:</strong> {{ product.unit_type }}</p>
+                                </div>
+
+                            </div>
+
+                            <hr>
+
+                            <!-- STATUS -->
+                            <p>
+                                <strong>Status:</strong>
+
+                                {% if product.initial_stock == 0 %}
+                                    <span class="badge bg-dark">Out of Stock</span>
+
+                                {% elif product.initial_stock <= product.reorder_level %}
+                                    <span class="badge bg-warning text-dark">Low Stock</span>
+
+                                {% else %}
+                                     <span class="badge bg-success">In Stock</span>
+                                {% endif %}
+                            </p>
+
+                           
+                            <!-- ACTION BUTTONS -->
+                            <div class="row mt-3">
+                                <div class="col-12">
+
+                                    <div class="d-grid gap-2 d-sm-flex">
+
+                                        <!-- UPDATE -->
+                                        <a href="{% url 'update_product' product.id %}"
+                                        class="btn btn-warning text-white w-100 w-sm-auto m-2">
+                                            Update Product
+                                        </a>
+
+                                        <!-- DELETE -->
+                                        <a href="{% url 'delete_product' product.id %}"
+                                        class="btn btn-danger w-100 w-sm-auto m-2"
+                                        onclick="return confirm('Are you sure you want to delete this product?');">
+                                            Delete Product
+                                        </a>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock content %}

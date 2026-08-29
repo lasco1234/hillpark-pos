@@ -1,0 +1,13 @@
+{% load static %}
+
+<nav class="sidebar sidebar-offcanvas w-auto d-inline-block" id="sidebar">
+  <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top">
+  <a class="sidebar-brand brand-logo" href="{% url 'home' %}">
+    <img src="{% static 'dashboard/images/logo.png' %}" alt="logo" />
+  </a>
+  <a class="sidebar-brand brand-logo-mini" href="{% url 'home' %}">
+    <img src="{% static 'dashboard/images/logo-mini.svg' %}" alt="logo" />
+  </a>
+</div>
+  
+</nav>

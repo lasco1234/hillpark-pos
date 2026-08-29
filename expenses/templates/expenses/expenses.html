@@ -1,0 +1,156 @@
+{% extends 'expenses_layout.html' %}
+{% block title %}Expenses{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="card border-0 shadow-sm mb-4" style="background:#fcfdff; border-radius:10px;">
+        <div class="card-body p-4">
+            <h1 class="mb-1 responsive-title" style="color:#647688;">Expenses</h1>
+            <p class="text-muted mb-4">
+                Manage daily expenses. Anything you save here also appears on the Daily Sales Report page (and vice-versa).
+            </p>
+
+            <!-- Filters -->
+            <form method="get" class="row g-3 align-items-end mb-4">
+                {% if stores|length > 1 %}
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold text-muted">Shop</label>
+                    <select name="store_id" class="form-select" onchange="this.form.submit()">
+                        {% for s in stores %}
+                        <option value="{{ s.pk }}" {% if store and store.pk == s.pk %}selected{% endif %}>
+                            {{ s.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% else %}
+                <input type="hidden" name="store_id" value="{{ store.pk }}">
+                {% endif %}
+
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-muted">Date</label>
+                    <input type="date" name="date" class="form-control text-muted"
+                           value="{{ report_date }}" onchange="this.form.submit()"
+                           style="background-color:rgb(231,235,235); border:none;">
+                </div>
+            </form>
+
+            {% if store %}
+            <!-- Add form -->
+            <form method="post" action="{% url 'expenses:save_expenses' %}">
+                {% csrf_token %}
+                <input type="hidden" name="store_id" value="{{ store.pk }}">
+                <input type="hidden" name="date" value="{{ report_date }}">
+
+                <div class="card border rounded-4 p-3 mb-4" style="background:#647688;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-white fw-bold mb-0">Add Expenses</h6>
+                        <button type="button" class="btn btn-sm btn-light" onclick="addExpenseRow()">+ Add</button>
+                    </div>
+
+                    <div id="expense-rows">
+                        <div class="expense-row row g-2 mb-2">
+                            <div class="col-5">
+                                <input type="number" name="expense_amount"
+                                       class="form-control form-control-sm"
+                                       placeholder="Amount" step="1" min="0"
+                                       style="background-color:rgb(231,235,235); border:none; color: black;">
+                            </div>
+                            <div class="col-6">
+                                <input type="text" name="expense_purpose"
+                                       class="form-control form-control-sm"
+                                       placeholder="Purpose e.g. Lunch / Transport"
+                                       style="background-color:rgb(231,235,235); border:none; color: black;">
+                            </div>
+                            <div class="col-1 d-flex align-items-center">
+                                <button type="button" class="btn btn-sm btn-outline-light"
+                                        onclick="this.closest('.expense-row').remove()">✕</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <button type="submit" class="btn text-white px-4" style="background:#4a5a6a;">
+                            Save Expenses
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Saved expenses -->
+            <h6 class="fw-bold mt-4 text-muted">Saved Expenses — {{ report_date }}</h6>
+
+            {% if cash_outs %}
+            <table class="table table-sm table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Amount (TZS)</th>
+                        <th>Purpose</th>
+                        <th style="width:70px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in cash_outs %}
+                    <tr>
+                        <td>{{ c.amount|floatformat:0 }}</td>
+                        <td>{{ c.purpose }}</td>
+                        <td>
+                            {% if report_date == today %}
+                                <form method="post"
+                                    action="{% url 'expenses:delete_expense' c.pk %}"
+                                    onsubmit="return confirm('Delete this expense?');"
+                                    style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">✕</button>
+                                </form>
+                            {% else %}
+                                <span class="text-muted small">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-info">No expenses recorded for this day.</div>
+            {% endif %}
+
+            {% else %}
+            <div class="alert alert-info">Select a store and date to continue.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function addExpenseRow() {
+    const html = `
+    <div class="expense-row row g-2 mb-2">
+        <div class="col-5">
+            <input type="number" name="expense_amount" class="form-control form-control-sm"
+                   placeholder="Amount" step="1" min="0"
+                   style="background-color:rgb(231,235,235); border:none;">
+        </div>
+        <div class="col-6">
+            <input type="text" name="expense_purpose" class="form-control form-control-sm"
+                   placeholder="Purpose e.g. Lunch / Transport"
+                   style="background-color:rgb(231,235,235); border:none;">
+        </div>
+        <div class="col-1 d-flex align-items-center">
+            <button type="button" class="btn btn-sm btn-outline-light"
+                    onclick="this.closest('.expense-row').remove()">✕</button>
+        </div>
+    </div>`;
+    document.getElementById('expense-rows').insertAdjacentHTML('beforeend', html);
+}
+</script>
+{% endblock %}

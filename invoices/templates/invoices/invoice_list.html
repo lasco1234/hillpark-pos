@@ -1,0 +1,175 @@
+{% extends 'invoices_layout.html' %}
+{% block title %}Invoices{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between flex-wrap gap-2 mb-4">
+        <h1 class="mb-0 responsive-title" style="color: #647688;">Invoices & Documents</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'invoices:invoice_create' %}?type=proforma{% if store %}&store_id={{ store.pk }}{% endif %}"
+               class="btn btn-outline-secondary text-info">+ Proforma</a>
+            <a href="{% url 'invoices:invoice_create' %}?type=invoice{% if store %}&store_id={{ store.pk }}{% endif %}"
+               class="btn text-white" style="background:#647688;">+ Invoice</a>
+            <a href="{% url 'invoices:invoice_create' %}?type=delivery{% if store %}&store_id={{ store.pk }}{% endif %}"
+               class="btn btn-outline-primary">+ Delivery Note</a>
+        </div>
+    </div>
+
+    <!-- Filters + Search -->
+    <form method="get" class="row g-2 mb-3 align-items-end">
+        {% if stores|length > 1 %}
+        <div class="col-auto">
+            <label class="form-label small text-muted mb-1">Shop</label>
+            <select name="store_id" class="form-select" onchange="this.form.submit()">
+                {% for s in stores %}
+                <option value="{{ s.pk }}" {% if store.pk == s.pk %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="col-auto">
+            <label class="form-label small text-muted mb-1">Type</label>
+            <select name="type" class="form-select" onchange="this.form.submit()">
+                <option value="">All types</option>
+                <option value="proforma" {% if doc_type == 'proforma' %}selected{% endif %}>Proforma</option>
+                <option value="invoice" {% if doc_type == 'invoice' %}selected{% endif %}>Invoice</option>
+                <option value="delivery" {% if doc_type == 'delivery' %}selected{% endif %}>Delivery Note</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label small text-muted mb-1">Search customer</label>
+            <div class="input-group">
+                <input type="text"
+                       name="q"
+                       value="{{ search }}"
+                       class="form-control rounded"
+                       placeholder="Customer name..."
+                       style="background-color: rgb(231, 235, 235); color: black; border: #d9dcdf solid 1px;">
+                <button type="submit" class="btn btn-outline-secondary text-muted" style="border: #c6c9cc solid 1px;">Search</button>
+                {% if search %}
+                <a href="?{% if store %}store_id={{ store.pk }}&{% endif %}type={{ doc_type }}"
+                   class="btn btn-outline-danger">Clear</a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Number</th>
+                        <th>Type</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoices %}
+                    <tr style="background-color: #647688; color: white;"
+                        onmouseover="this.style.backgroundColor='rgb(10, 10, 10)'"
+                        onmouseout="this.style.backgroundColor='#647688'">
+                        <td>
+                            <a href="{% url 'invoices:invoice_detail' inv.pk %}" class="text-white text-decoration-underline">
+                                {{ inv.number }}
+                            </a>
+                        </td>
+                        <td>{{ inv.get_doc_type_display }}</td>
+                        <td>{{ inv.customer_name }}</td>
+                        <td>{{ inv.issue_date|date:"d M Y" }}</td>
+                        <td>
+                            {% if inv.doc_type != 'delivery' %}
+                                {{ inv.total|floatformat:0 }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary text-black">{{ inv.get_status_display }}</span>
+                        </td>
+                        <td>
+                            <a href="{% url 'invoices:invoice_pdf' inv.pk %}"
+                               class="btn btn-sm btn-danger" target="_blank">PDF</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            {% if search %}
+                                No documents found for “{{ search }}”
+                            {% else %}
+                                No documents yet
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj and page_obj.paginator.num_pages > 1 %}
+        <div class="card-footer bg-white">
+            <nav class="d-flex justify-content-center">
+                <ul class="pagination mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page=1&type={{ doc_type }}&q={{ search }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                            « First
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.previous_page_number }}&type={{ doc_type }}&q={{ search }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                            ‹ Prev
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?page={{ num }}&type={{ doc_type }}&q={{ search }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.next_page_number }}&type={{ doc_type }}&q={{ search }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                            Next ›
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.paginator.num_pages }}&type={{ doc_type }}&q={{ search }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                            Last »
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            <p class="text-center text-muted small mt-2 mb-0">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                ({{ page_obj.paginator.count }} documents)
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

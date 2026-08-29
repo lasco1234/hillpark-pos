@@ -1,0 +1,277 @@
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ---------------- DISCOUNT + TAX ----------------
+    const discountType = document.getElementById("discount_type");
+    const discountValue = document.getElementById("discount_value");
+    const discountAddon = document.getElementById("discount-addon");
+
+    const taxType = document.getElementById("tax_type");
+    const taxAmount = document.getElementById("tax_amount");
+
+    function updateDiscount() {
+        if (discountType.value === "None") {
+            discountValue.disabled = true;
+            discountValue.value = 0;
+            discountAddon.innerText = "TZS";
+        } else {
+            discountValue.disabled = false;
+
+            if (discountType.value === "Percentage") {
+                discountAddon.innerText = "%";
+                discountValue.placeholder = "Enter % discount";
+            } else {
+                discountAddon.innerText = "TZS";
+                discountValue.placeholder = "Enter amount in TZS";
+            }
+        }
+    }
+
+    function updateTax() {
+        if (taxType.value === "None") {
+            taxAmount.disabled = true;
+            taxAmount.value = 0;
+        } else {
+            taxAmount.disabled = false;
+            taxAmount.placeholder = "Enter tax %";
+        }
+    }
+
+    discountType.addEventListener("change", updateDiscount);
+    taxType.addEventListener("change", updateTax);
+
+    updateDiscount();
+    updateTax();
+
+
+    // ---------------- WARRANTY / MANUFACTURER / EXPIRY ----------------
+    const hasWarranty = document.getElementById("has_warranty");
+    const warrantyDetails = document.getElementById("warranty_details");
+
+    const hasManufacturer = document.getElementById("has_manufacturer");
+    const manufacturer = document.getElementById("manufacturer");
+
+    const hasExpiry = document.getElementById("has_expiry_date");
+    const expiryDate = document.getElementById("expiry_date");
+
+    function toggleField(checkbox, field) {
+        if (checkbox.checked) {
+            field.disabled = false;
+        } else {
+            field.disabled = true;
+            field.value = "";
+        }
+    }
+
+    hasWarranty.addEventListener("change", () => {
+        toggleField(hasWarranty, warrantyDetails);
+    });
+
+    hasManufacturer.addEventListener("change", () => {
+        toggleField(hasManufacturer, manufacturer);
+    });
+
+    hasExpiry.addEventListener("change", () => {
+        toggleField(hasExpiry, expiryDate);
+    });
+
+    toggleField(hasWarranty, warrantyDetails);
+    toggleField(hasManufacturer, manufacturer);
+    toggleField(hasExpiry, expiryDate);
+
+});
+</script>
+
+
+<!-- ===================== ADDED ONLY (VALIDATION ENGINE + PRICE LOGIC) ===================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const productName = document.getElementById("product_name");
+    const buy = document.getElementById("id_buy_price");
+    const sell = document.getElementById("id_sell_price");
+
+
+    // ===================== PROFIT CALCULATOR =====================
+    const profitBox = document.createElement("div");
+    profitBox.classList.add("mt-2", "fw-bold", "text-success");
+    sell.parentNode.appendChild(profitBox);
+
+    function calculateProfit() {
+        let buyPrice = parseFloat(buy.value) || 0;
+        let sellPrice = parseFloat(sell.value) || 0;
+
+        let profit = sellPrice - buyPrice;
+
+        if (buyPrice > 0 || sellPrice > 0) {
+            profitBox.innerText = "Profit: " + profit.toFixed(2) + " TZS";
+        } else {
+            profitBox.innerText = "";
+        }
+    }
+
+    function markError(field, condition, message) {
+        if (!field) return;
+
+        let errorDiv = field.parentNode.querySelector(".live-error");
+
+        if (!errorDiv) {
+            errorDiv = document.createElement("div");
+            errorDiv.classList.add("text-danger", "small", "live-error");
+            field.parentNode.appendChild(errorDiv);
+        }
+
+        if (condition) {
+            field.classList.add("is-invalid");
+            errorDiv.innerText = message;
+        } else {
+            field.classList.remove("is-invalid");
+            errorDiv.innerText = "";
+        }
+    }
+
+    function validateFields() {
+
+        let name = productName ? productName.value.trim() : "";
+        let b = parseFloat(buy?.value) || 0;
+        let s = parseFloat(sell?.value) || 0;
+
+        // ---------------- PRODUCT NAME ----------------
+        markError(
+            productName,
+            name === "" || /^[^A-Za-z]/.test(name),
+            "Product name must start with a letter and cannot be empty"
+        );
+
+        // ---------------- BUY PRICE ----------------
+        markError(
+            buy,
+            b <= 0,
+            "Buy price must be greater than 0"
+        );
+
+        // ---------------- SELL PRICE ----------------
+        markError(
+            sell,
+            s <= 0,
+            "Sell price must be greater than 0"
+        );
+
+        markError(
+            sell,
+            s < b,
+            "Sell price cannot be lower than buy price"
+        );
+    }
+    
+    // LIVE VALIDATION
+    if (productName) productName.addEventListener("input", validateFields);
+    if (buy) buy.addEventListener("input", validateFields);
+    if (sell) sell.addEventListener("input", validateFields);
+    buy.addEventListener("input", calculateProfit);
+    sell.addEventListener("input", calculateProfit);
+
+    // run on load
+    calculateProfit();
+
+    validateFields();
+
+});
+
+function validateFields() {
+
+    let name = productName ? productName.value.trim() : "";
+
+    let bRaw = buy?.value || "";
+    let sRaw = sell?.value || "";
+    let wRaw = wholesale?.value || "";
+
+    let b = parseFloat(bRaw) || 0;
+    let s = parseFloat(sRaw) || 0;
+    let w = parseFloat(wRaw) || 0;
+
+    // ===================== NAME =====================
+    markError(
+        productName,
+        name === "" || /^[^A-Za-z]/.test(name),
+        "Product name must start with a letter"
+    );
+
+    // ===================== BUY PRICE =====================
+    markError(
+        buy,
+        b <= 0,
+        "Buy price must be greater than 0"
+    );
+
+    markError(
+        buy,
+        /^0\d+/.test(bRaw),
+        "Buy price cannot start with 0"
+    );
+
+    // ===================== SELL PRICE =====================
+    markError(
+        sell,
+        s <= 0,
+        "Sell price must be greater than 0"
+    );
+
+    markError(
+        sell,
+        /^0\d+/.test(sRaw),
+        "Sell price cannot start with 0"
+    );
+
+    markError(
+        sell,
+        s < b,
+        "Sell price cannot be lower than buy price"
+    );
+
+    // ===================== WHOLESALE PRICE =====================
+    if (wholesale) {
+
+        markError(
+            wholesale,
+            /^0\d+/.test(wRaw),
+            "Wholesale price cannot start with 0"
+        );
+
+        markError(
+            wholesale,
+            w < 0,
+            "Wholesale price cannot be negative"
+        );
+    }
+}
+
+
+
+
+
+function validateFields() {
+
+        let name = productName ? productName.value.trim() : "";
+        let b = parseFloat(buy?.value) || 0;
+        let s = parseFloat(sell?.value) || 0;
+
+        // NAME
+        markError(
+            productName,
+            name === "" || /^[^A-Za-z]/.test(name),
+            "Product name must start with a letter"
+        );
+
+        // BUY PRICE
+        markError(buy, b <= 0, "Buy price must be greater than 0");
+
+        // SELL PRICE
+        markError(sell, s <= 0, "Sell price must be greater than 0");
+
+        markError(sell, s < b, "Sell price cannot be lower than buy price");
+        
+    }
+</script>
+

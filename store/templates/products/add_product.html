@@ -1,0 +1,553 @@
+{% extends 'store_layout.html' %}
+{% load humanize %}
+{% block title %}
+Add Product
+{% endblock title %}
+{% block content %}
+<div class="container py-4">
+    <div class="card border-0 text-black" style="background-color: rgb(239, 243, 243);">
+        <div class="p-3">
+            <h1 class="responsive-title" style="color: #647688;">Add New Product</h1>
+            <p>Fill in the details below to register a new product</p>
+        </div>
+        <form id="product-form" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div id="alert-box" class="alert d-none" role="alert"></div>
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            <div class="card-body p-4 shadow-lg border-0"
+                 style="background-color: rgb(252, 253, 255); border-radius: 10px;">
+                
+                <!-- STORE -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        Store <span class="text-danger">*</span>
+                    </label>
+                    {{ form.store }}
+                    <div class="text-danger small">{{ form.store.errors }}</div>
+                </div>
+
+                <!-- CATEGORY -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        Category <span class="text-danger">*</span>
+                    </label>
+                    {{ form.category }}
+                    <div class="text-danger small">{{ form.category.errors }}</div>
+                </div>
+
+                <!-- PRODUCT NAME -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        Product Name <span class="text-danger">*</span>
+                    </label>
+                    {{ form.product_name }}
+                    <div class="text-danger small">{{ form.product_name.errors }}</div>
+                </div>
+
+                <!-- PRODUCT GROUP + VARIANT -->
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-semibold">
+                            Product Group <span class="text-muted">(optional)</span>
+                        </label>
+                        {{ form.product_group }}
+                        <div class="form-text text-muted small">
+                            Use the same name for related products (e.g. HDMI Cable)
+                        </div>
+                        <div class="text-danger small">{{ form.product_group.errors }}</div>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-semibold">
+                            Variant <span class="text-muted">(optional)</span>
+                        </label>
+                        {{ form.variant }}
+                        <div class="form-text text-muted small">
+                            e.g. 1.5m, 2m, 16GB/512GB, Gen 13 i7
+                        </div>
+                        <div class="text-danger small">{{ form.variant.errors }}</div>
+                    </div>
+                </div>
+
+                <!-- PRICES -->
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label fw-semibold">Buy Price <span class="text-danger">*</span></label>
+                        {{ form.buy_price }}
+                        <div class="form-text text-muted small" id="buy-price-hint">
+                            Select a category first
+                        </div>
+                        <div class="text-danger small">{{ form.buy_price.errors }}</div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label fw-semibold">Sell Price <span class="text-muted">(auto)</span></label>
+                        <input type="text" id="display_sell_price" class="form-control" readonly
+                               style="background-color: #e9ecef; color: #647688; border: none;" placeholder="Calculated automatically">
+                        <input type="hidden" name="sell_price" id="id_sell_price" value="">
+                        <div class="text-danger small" id="sell_price_error"></div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label fw-semibold">Wholesale Price <span class="text-muted">(auto)</span></label>
+                        <input type="text" id="display_wholesale_price" class="form-control" readonly
+                               style="background-color: #e9ecef; color: #647688; border: none;" placeholder="Calculated automatically">
+                        <input type="hidden" name="wholesale_price" id="id_wholesale_price" value="">
+                        <div class="text-danger small">{{ form.wholesale_price.errors }}</div>
+                    </div>
+                </div>
+
+                <!-- STOCK -->
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label fw-semibold">Initial Stock <span class="text-danger">*</span></label>
+                        {{ form.initial_stock }}
+                        <div class="text-danger small">{{ form.initial_stock.errors }}</div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label fw-semibold">Reorder Level</label>
+                        {{ form.reorder_level }}
+                        <div class="text-danger small">{{ form.reorder_level.errors }}</div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label fw-semibold">Unit Type</label>
+                        {{ form.unit_type }}
+                        <div class="text-danger small">{{ form.unit_type.errors }}</div>
+                    </div>
+                </div>
+
+                <!-- TAX & DISCOUNT -->
+                <div class="card mb-4 border rounded-4 p-3" style="background-color: #647688;">
+                    <h6 class="text-white fw-bold">Tax & Discount</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="text-white">Tax Type</label>
+                            {{ form.tax_type }}
+                            <div class="text-danger small">{{ form.tax_type.errors }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-white">Tax Amount</label>
+                            {{ form.tax_amount }}
+                            <div class="text-danger small">{{ form.tax_amount.errors }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-white">Discount Type</label>
+                            {{ form.discount_type }}
+                            <div class="text-danger small">{{ form.discount_type.errors }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                {{ form.discount_value }}
+                                <span class="input-group-text" id="discount-addon">TZS</span>
+                            </div>
+                            <div class="text-danger small">{{ form.discount_value.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WARRANTY & OTHER -->
+                <div class="card mb-4 border rounded-4 p-3" style="background-color: #647688;">
+                    <h6 class="text-white fw-bold">Additional Details</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check d-flex align-items-center">
+                                {{ form.has_warranty }}
+                                <label class="form-check-label text-white">Has Warranty</label>
+                            </div>
+                            <div>
+                                <label class="text-white">Warranty Details</label>
+                                {{ form.warranty_details }}
+                                <div class="text-danger small">{{ form.warranty_details.errors }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check d-flex align-items-center">
+                                {{ form.has_manufacturer }}
+                                <label class="form-check-label text-white">Has Manufacturer</label>
+                            </div>
+                            <div>
+                                <label class="text-white">Manufacturer</label>
+                                {{ form.manufacturer }}
+                                <div class="text-danger small">{{ form.manufacturer.errors }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check d-flex align-items-center">
+                                {{ form.has_expiry_date }}
+                                <label class="form-check-label text-white">Has Expiry Date</label>
+                            </div>
+                            <div>
+                                <label class="text-white">Expiry Date</label>
+                                {{ form.expiry_date }}
+                                <div class="text-danger small">{{ form.expiry_date.errors }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-white">Low Stock Alert</label>
+                            {{ form.low_stock_alert_quantity }}
+                            <div class="text-danger small">{{ form.low_stock_alert_quantity.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IMAGE & DESCRIPTION -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Product Image</label>
+                    {{ form.product_image }}
+                    <div class="text-danger small">{{ form.product_image.errors }}</div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Short Description</label>
+                    {{ form.description }}
+                    <div class="text-danger small">{{ form.description.errors }}</div>
+                </div>
+
+                <!-- BUTTONS -->
+                <div class="d-flex justify-content-end align-items-center gap-3 mt-4">
+                    <button type="button" class="btn btn-light border rounded-3 px-4">Cancel</button>
+                    <button type="submit" class="btn text-white rounded-3 px-4"
+                            style="background-color: #647688;">
+                        Add Product
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ===================== ELEMENTS =====================
+    const storeField      = document.getElementById("id_store");
+    const categoryField   = document.getElementById("id_category");
+    const buyField        = document.getElementById("id_buy_price");
+    const sellHidden      = document.getElementById("id_sell_price");
+    const wholesaleHidden = document.getElementById("id_wholesale_price");
+    const displaySell     = document.getElementById("display_sell_price");
+    const displayWholesale= document.getElementById("display_wholesale_price");
+    const productName     = document.getElementById("id_product_name");
+    const buyPriceHint    = document.getElementById("buy-price-hint");
+
+    // Discount / Tax
+    const discountType  = document.getElementById("discount_type") || document.getElementById("id_discount_type");
+    const discountValue = document.getElementById("discount_value") || document.getElementById("id_discount_value");
+    const discountAddon = document.getElementById("discount-addon");
+    const taxType       = document.getElementById("tax_type") || document.getElementById("id_tax_type");
+    const taxAmount     = document.getElementById("tax_amount") || document.getElementById("id_tax_amount");
+
+    // Conditional fields
+    const hasWarranty     = document.getElementById("has_warranty") || document.getElementById("id_has_warranty");
+    const warrantyDetails = document.getElementById("warranty_details") || document.getElementById("id_warranty_details");
+    const hasManufacturer = document.getElementById("has_manufacturer") || document.getElementById("id_has_manufacturer");
+    const manufacturer    = document.getElementById("manufacturer") || document.getElementById("id_manufacturer");
+    const hasExpiry       = document.getElementById("has_expiry_date") || document.getElementById("id_has_expiry_date");
+    const expiryDate      = document.getElementById("expiry_date") || document.getElementById("id_expiry_date");
+
+    // Profit box
+    const profitBox = document.createElement("div");
+    profitBox.classList.add("mt-2", "fw-bold", "text-success");
+    if (displaySell && displaySell.parentNode) {
+        displaySell.parentNode.appendChild(profitBox);
+    }
+
+    // ===================== BUY PRICE ENABLE / DISABLE =====================
+    function updateBuyPriceState() {
+        const hasCategory = categoryField && categoryField.value !== "";
+
+        if (buyField) {
+            buyField.disabled = !hasCategory;
+
+            if (!hasCategory) {
+                // Clear everything when no category
+                buyField.value = "";
+                displaySell.value = "";
+                displayWholesale.value = "";
+                sellHidden.value = "";
+                wholesaleHidden.value = "";
+                profitBox.innerText = "";
+                if (buyPriceHint) buyPriceHint.style.display = "block";
+            } else {
+                if (buyPriceHint) buyPriceHint.style.display = "none";
+            }
+        }
+    }
+
+    // ===================== PRICE CALCULATION =====================
+    function calculatePrices() {
+        // Only calculate if category is selected
+        if (!categoryField || !categoryField.value) {
+            displaySell.value = "";
+            displayWholesale.value = "";
+            sellHidden.value = "";
+            wholesaleHidden.value = "";
+            profitBox.innerText = "";
+            return;
+        }
+
+        const buy = parseFloat(buyField?.value) || 0;
+        const categoryText = (categoryField.options[categoryField.selectedIndex]?.text || "").toLowerCase().trim();
+
+        let sell = 0;
+        let wholesale = 0;
+
+        if (buy <= 0) {
+            displaySell.value = "";
+            displayWholesale.value = "";
+            sellHidden.value = "";
+            wholesaleHidden.value = "";
+            profitBox.innerText = "";
+            return;
+        }
+
+        // ----- ACCESSORY -----
+        if (categoryText.includes("accessor")) {
+            sell = buy + (buy * 0.35);          // +35%
+            wholesale = buy + (buy * 0.20);     // +20%
+        }
+        // ----- LAPTOP / DESKTOP -----
+        else if (categoryText.includes("laptop") || categoryText.includes("desktop")) {
+            if (buy <= 399999) {
+                sell = buy + 50000;
+            } else if (buy <= 499999) {
+                sell = buy + 70000;
+            } else if (buy <= 699999) {
+                sell = buy + 90000;
+            } else if (buy <= 999999) {
+                sell = buy + 100000;
+            } else if (buy <= 1499999) {
+                sell = buy + 150000;
+            } else if (buy <= 1999999) {
+                sell = buy + 200000;
+            } else if (buy <= 2499999) {
+                sell = buy + 250000;
+            } else if (buy <= 2999999) {
+                sell = buy + 300000;
+            } else {
+                // Above 2,999,999 → +25%
+                sell = buy + (buy * 0.25);
+            }
+
+            const margin = sell - buy;
+            wholesale = buy + (margin * 0.65);  // 65% of retail margin
+        }
+        // ----- OTHER CATEGORIES -----
+        else {
+            sell = buy + (buy * 0.25);
+            wholesale = buy + (buy * 0.15);
+        }
+
+        // Round to whole numbers
+        sell = Math.round(sell);
+        wholesale = Math.round(wholesale);
+
+        displaySell.value = sell.toLocaleString();
+        displayWholesale.value = wholesale.toLocaleString();
+        sellHidden.value = sell;
+        wholesaleHidden.value = wholesale;
+
+        const profit = sell - buy;
+        profitBox.innerText = `Profit: ${profit.toLocaleString()} TZS`;
+    }
+
+    // Category change → enable/disable buy price + recalculate
+    if (categoryField) {
+        categoryField.addEventListener("change", function () {
+            updateBuyPriceState();
+            calculatePrices();
+            validateFields();
+        });
+    }
+
+    // Buy price change → recalculate
+    if (buyField) {
+        buyField.addEventListener("input", calculatePrices);
+        buyField.addEventListener("change", calculatePrices);
+    }
+
+    // ===================== DISCOUNT + TAX =====================
+    function updateDiscount() {
+        if (!discountType || !discountValue) return;
+        if (discountType.value === "None") {
+            discountValue.disabled = true;
+            discountValue.value = 0;
+            if (discountAddon) discountAddon.innerText = "TZS";
+        } else {
+            discountValue.disabled = false;
+            if (discountAddon) {
+                discountAddon.innerText = discountType.value === "Percentage" ? "%" : "TZS";
+            }
+        }
+    }
+
+    function updateTax() {
+        if (!taxType || !taxAmount) return;
+        taxAmount.disabled = taxType.value === "None";
+        if (taxType.value === "None") taxAmount.value = 0;
+    }
+
+    if (discountType) discountType.addEventListener("change", updateDiscount);
+    if (taxType) taxType.addEventListener("change", updateTax);
+    updateDiscount();
+    updateTax();
+
+    // ===================== CONDITIONAL FIELDS =====================
+    function toggleField(checkbox, field) {
+        if (checkbox && field) {
+            field.disabled = !checkbox.checked;
+            if (!checkbox.checked) field.value = "";
+        }
+    }
+
+    if (hasWarranty) hasWarranty.addEventListener("change", () => toggleField(hasWarranty, warrantyDetails));
+    if (hasManufacturer) hasManufacturer.addEventListener("change", () => toggleField(hasManufacturer, manufacturer));
+    if (hasExpiry) hasExpiry.addEventListener("change", () => toggleField(hasExpiry, expiryDate));
+
+    toggleField(hasWarranty, warrantyDetails);
+    toggleField(hasManufacturer, manufacturer);
+    toggleField(hasExpiry, expiryDate);
+
+    // ===================== LIVE VALIDATION =====================
+    function markError(field, condition, message) {
+        if (!field) return;
+        let errorDiv = field.parentNode.querySelector(".live-error");
+        if (!errorDiv) {
+            errorDiv = document.createElement("div");
+            errorDiv.classList.add("text-danger", "small", "live-error");
+            field.parentNode.appendChild(errorDiv);
+        }
+        if (condition) {
+            field.classList.add("is-invalid");
+            errorDiv.innerText = message;
+        } else {
+            field.classList.remove("is-invalid");
+            errorDiv.innerText = "";
+        }
+    }
+
+    function validateFields() {
+        if (storeField) {
+            markError(storeField, !storeField.value, "Please select a store");
+        }
+
+        if (categoryField) {
+            markError(categoryField, !categoryField.value, "Please select a category");
+        }
+
+        let name = productName ? productName.value.trim() : "";
+        markError(productName, name === "" || /^[^A-Za-z]/.test(name),
+                 "Product name must start with a letter");
+
+        let b = parseFloat(buyField?.value) || 0;
+        // Only validate buy price if category is selected
+        if (categoryField && categoryField.value) {
+            markError(buyField, b <= 0, "Buy price must be greater than 0");
+        } else {
+            markError(buyField, false, "");  // clear error
+        }
+
+        let s = parseFloat(sellHidden?.value) || 0;
+        if (b > 0 && s <= 0) {
+            document.getElementById("sell_price_error").innerText = "Sell price could not be calculated";
+        } else {
+            document.getElementById("sell_price_error").innerText = "";
+        }
+    }
+
+    [storeField, productName, buyField, categoryField].forEach(field => {
+        if (field) {
+            field.addEventListener("change", validateFields);
+            field.addEventListener("input", validateFields);
+        }
+    });
+
+    // ===================== AJAX SUBMIT =====================
+    const form = document.getElementById("product-form");
+    if (form) {
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            calculatePrices();
+            validateFields();
+
+            // Extra safety: don't submit if no category
+            if (!categoryField || !categoryField.value) {
+                alert("Please select a category first.");
+                return;
+            }
+
+            let formData = new FormData(form);
+
+            // Important: disabled fields are not submitted.
+            // Temporarily enable buy_price so its value is sent.
+            if (buyField) buyField.disabled = false;
+
+            fetch("", {
+                method: "POST",
+                body: formData,
+                headers: { "X-CSRFToken": getCookie("csrftoken") }
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Re-disable if needed
+                updateBuyPriceState();
+
+                if (data.success) {
+                    alert("✅ Product added successfully!");
+                    form.reset();
+                    updateDiscount();
+                    updateTax();
+                    toggleField(hasWarranty, warrantyDetails);
+                    toggleField(hasManufacturer, manufacturer);
+                    toggleField(hasExpiry, expiryDate);
+                    updateBuyPriceState();
+                    calculatePrices();
+                    validateFields();
+                } else {
+                    document.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+                    document.querySelectorAll(".server-error").forEach(el => el.remove());
+
+                    for (let field in data.errors) {
+                        let input = document.getElementById("id_" + field);
+                        if (input) {
+                            input.classList.add("is-invalid");
+                            let errDiv = document.createElement("div");
+                            errDiv.classList.add("text-danger", "small", "server-error");
+                            errDiv.innerText = data.errors[field].join(", ");
+                            input.parentNode.appendChild(errDiv);
+                        }
+                    }
+                    alert("❌ Please fix the highlighted errors.");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                updateBuyPriceState();
+            });
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie) {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // ===================== INITIAL STATE =====================
+    updateBuyPriceState();   // Buy price starts disabled
+    calculatePrices();
+    validateFields();
+});
+</script>
+{% endblock content %}

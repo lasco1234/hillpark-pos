@@ -1,0 +1,53 @@
+<form method="get" class="row g-3 align-items-end mb-4" id="period-filter">
+    {% if stores|length > 1 %}
+    <div class="col-md-3">
+        <label class="form-label fw-semibold text-muted">Shop</label>
+        <select name="store_id" class="form-select" onchange="this.form.submit()">
+            {% for s in stores %}
+            <option value="{{ s.pk }}" {% if store and store.pk == s.pk %}selected{% endif %}>
+                {{ s.name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    {% elif store %}
+    <input type="hidden" name="store_id" value="{{ store.pk }}">
+    {% endif %}
+
+    <div class="col-md-2">
+        <label class="form-label fw-semibold">Period</label>
+        <select name="period" class="form-select" id="period-select" onchange="toggleCustomDates()">
+            <option value="daily"   {% if period == 'daily' %}selected{% endif %}>Daily</option>
+            <option value="weekly"  {% if period == 'weekly' %}selected{% endif %}>Weekly</option>
+            <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>Monthly</option>
+            <option value="yearly"  {% if period == 'yearly' %}selected{% endif %}>Yearly</option>
+            <option value="custom"  {% if period == 'custom' %}selected{% endif %}>Custom range</option>
+        </select>
+    </div>
+
+    <div class="col-md-2 custom-dates" style="{% if period != 'custom' %}display:none{% endif %}">
+        <label class="form-label fw-semibold">From</label>
+        <input type="date" name="start" class="form-control" value="{{ start_str }}">
+    </div>
+    <div class="col-md-2 custom-dates" style="{% if period != 'custom' %}display:none{% endif %}">
+        <label class="form-label fw-semibold">To</label>
+        <input type="date" name="end" class="form-control" value="{{ end_str }}">
+    </div>
+
+    <div class="col-md-2">
+        <button type="submit" class="btn text-white w-100" style="background:#647688;">Apply</button>
+    </div>
+</form>
+
+<script>
+function toggleCustomDates() {
+    const show = document.getElementById('period-select').value === 'custom';
+    document.querySelectorAll('.custom-dates').forEach(el => {
+        el.style.display = show ? '' : 'none';
+    });
+    // Auto-apply when not custom
+    if (!show) {
+        document.getElementById('period-filter').submit();
+    }
+}
+</script>

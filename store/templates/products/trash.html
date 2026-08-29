@@ -1,0 +1,150 @@
+{% extends 'store_layout.html' %}
+
+{% load static %}
+
+{% block title %}
+    product trash
+{% endblock title %}
+    
+{% block content %}
+<div class="container-fluid py-4 px-5">
+     <!-- HEADER -->
+     <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold responsive-title" style="color: #647688;">Deleted Product(Trash)</h3>
+            
+        </div>
+
+        <a href="{% url 'product_list' %}" 
+           class="btn text-white"
+           style="background-color: #647688;">
+            Product_list
+        </a>
+        </div>
+
+    <div class="card text-black shadow-lg border-0" style="border-radius: 10px;">
+
+        
+    <!-- PRODUCT Trash -->
+    <div class="card border-0 shadow-lg" style="background-color: #647688; border-radius: 10px;">
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <form method="POST" action="{% url 'bulk_trash_action' %}">
+                    {% csrf_token %}
+
+                    <div class="mb-3 d-flex gap-2">
+
+                        <button type="submit" name="action" value="restore"
+                                class="btn btn-success btn-sm mx-1">
+                            Restore Selected
+                        </button>
+
+                        <button type="submit" name="action" value="delete"
+                                class="btn btn-danger btn-sm mx-1"
+                                onclick="return confirm('Permanently delete selected products?');">
+                            Delete Selected
+                        </button>
+
+                    </div>
+                <table class="table align-middle table-hover">
+                    <thead style="background-color: #f6f8fa;">
+                        <tr>
+                            <th><input type="checkbox" id="select-all"></th>
+                            <th>#</th>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Deleted At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    {% for product in products %}
+                    <tr class="text-white">
+                        <td><input type="checkbox" name="selected_products" value="{{ product.id }}" class="product-checkbox"></td>
+                        <td>{{ forloop.counter }}</td>
+
+                            <!-- IMAGE -->
+                        <td>
+                            {% if product.product_image %}
+                                <img src="{{ product.product_image.url }}"
+                                        width="60"
+                                        height="60"
+                                        style="object-fit: cover; border-radius: 10px;">
+                            {% else %}
+                                <div class="bg-light d-flex justify-content-center align-items-center"
+                                        style="width:60px; height:60px; border-radius:10px;">
+                                    No Image
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ product.product_name }}</strong>
+
+                            <br>
+
+                            <small style="color: #e6eaee;">
+                                {{ product.description|truncatechars:40 }}
+                            </small>
+                        </td>
+
+                        <!-- CATEGORY -->
+                        <td>{{ product.category }}</td>
+                        <td>{{ product.deleted_at }}</td>
+                        <td>
+                            <a href="{% url 'restore_product' product.id %}" class="btn btn-success btn-sm" onclick="return confirm('Are you sure you want to restore this product?');">
+                                Restore
+                            </a>
+                            <a href="{% url 'permanent_delete' product.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this product permanently?');">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const selectAll = document.getElementById("select-all");
+    const checkboxes = document.querySelectorAll(".product-checkbox");
+
+    // WHEN HEADER CHECKBOX IS CLICKED
+    selectAll.addEventListener("change", function () {
+        checkboxes.forEach(cb => {
+            cb.checked = this.checked;
+        });
+    });
+
+    // OPTIONAL: if user unticks one box, uncheck "select all"
+    checkboxes.forEach(cb => {
+        cb.addEventListener("change", function () {
+            if (!this.checked) {
+                selectAll.checked = false;
+            }
+
+            // if ALL are checked, mark select-all
+            const allChecked = Array.from(checkboxes).every(c => c.checked);
+            selectAll.checked = allChecked;
+        });
+    });
+
+});
+</script>
+
+{% endblock content %}

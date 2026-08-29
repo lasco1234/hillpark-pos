@@ -1,0 +1,511 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+
+  <!-- Page Header + Period Filter -->
+  <div class="page-header d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="page-title mb-1 responsive-title" style="color: #647688;">Dashboard</h3>
+      <p class="text-muted mb-0">
+        {% if current_store %}
+          Store: <strong>{{ current_store.name }}</strong>
+        {% else %}
+          All Stores
+        {% endif %}
+        · Showing <strong>{{ period_label }}</strong>
+      </p>
+    </div>
+
+    <div class="btn-group mt-2 mt-md-0">
+      <a href="?period=all" class="btn btn-sm {% if period == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">All Time</a>
+      <a href="?period=this_year" class="btn btn-sm {% if period == 'this_year' %}btn-primary{% else %}btn-outline-primary{% endif %}">This Year</a>
+      <a href="?period=this_month" class="btn btn-sm {% if period == 'this_month' %}btn-primary{% else %}btn-outline-primary{% endif %}">This Month</a>
+      <a href="?period=30d" class="btn btn-sm {% if period == '30d' %}btn-primary{% else %}btn-outline-primary{% endif %}">30 Days</a>
+      <a href="?period=7d" class="btn btn-sm {% if period == '7d' %}btn-primary{% else %}btn-outline-primary{% endif %}">7 Days</a>
+    </div>
+  </div>
+
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% else %}
+
+  <!-- ========== KPI CARDS ========== -->
+  <div class="row">
+    <div class="col-xl-3 col-md-6 grid-margin stretch-card">
+      <div class="card text-white" style="background-color: rgb(39, 55, 73);">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="mb-1 opacity-75" style="font-size: 14px;">Total Sales</p>
+              <h3 class="mb-0" style="font-size: 20px;">Tsh. {{ total_sales|floatformat:0|intcomma }}</h3>
+              <small class="opacity-75">{{ total_sales_count }} transactions</small>
+            </div>
+            <i class="mdi mdi-cash-multiple icon-lg opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 grid-margin stretch-card">
+      <div class="card text-white" style="background-color: rgb(26, 73, 44);">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="mb-1 opacity-75" style="font-size: 14px;">Total Profit</p>
+              <h3 class="mb-0" style="font-size: 20px;">Tsh. {{ total_profit|floatformat:0|intcomma }}</h3>
+              <small class="opacity-75">{{ total_items_sold }} items sold</small>
+            </div>
+            <i class="mdi mdi-trending-up icon-lg opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 grid-margin stretch-card">
+      <div class="card text-white" style="background-color: rgb(92, 92, 150);">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="mb-1 opacity-75" style="font-size: 14px;">Expenses</p>
+              <h3 class="mb-0" style="font-size: 20px;">Tsh. {{ total_expenses|floatformat:2|intcomma }}</h3>
+              <small class="opacity-75">Total expenses</small>
+            </div>
+            <i class="mdi mdi-cash icon-lg opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 grid-margin stretch-card">
+      <div class="card text-white" style="background-color: rgb(146, 122, 78);">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="mb-1 opacity-75" style="font-size: 14px;">Stock Value (Cost)</p>
+              <h3 class="mb-0" style="font-size: 20px;">Tsh. {{ stock_value|floatformat:0|intcomma }}</h3>
+              <small class="opacity-75">{{ total_products }} products</small>
+            </div>
+            <i class="mdi mdi-package-variant icon-lg opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Second KPI row -->
+  <div class="row">
+    <div class="col-md-3 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body text-center py-4">
+          <h4 class="mb-1 text-white">{{ low_stock_count }}</h4>
+          <p class="mb-0 text-muted">Low Stock</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body text-center py-4">
+          <h4 class="mb-1 text-white">{{ out_of_stock_count }}</h4>
+          <p class="mb-0 text-muted">Out of Stock</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body text-center py-4">
+          <h4 class="mb-1 text-white">{{ total_invoices }}</h4>
+          <p class="mb-0 text-muted">Documents</p>
+          <small class="text-muted">{{ invoice_count }} Inv · {{ proforma_count }} Prof</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body text-center py-4">
+          <h4 class="mb-1 text-white">{{ total_orders }}</h4>
+          <p class="mb-0 text-muted">Supplier Orders</p>
+          <small class="text-muted">{{ draft_orders }} Draft · {{ sent_orders }} Sent</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== CHARTS ========== -->
+<div class="row">
+  <!-- Sales Trend -->
+  <div class="col-lg-8 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="card-title mb-0">Sales Trend</h4>
+          <small class="text-muted">{{ period_label }}</small>
+        </div>
+        <div style="position: relative; height: 280px;">
+          <canvas id="salesTrendChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock Status -->
+  <div class="col-lg-4 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Stock Status</h4>
+        <div style="position: relative; height: 280px;">
+          <canvas id="stockStatusChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Top Products -->
+  <div class="col-lg-6 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Top Products (Qty Sold)</h4>
+        <div style="position: relative; height: 280px;">
+          <canvas id="topProductsChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Types -->
+  <div class="col-lg-3 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Customers</h4>
+        <div style="position: relative; height: 280px;">
+          <canvas id="customerTypeChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Documents -->
+  <div class="col-lg-3 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Documents</h4>
+        <div style="position: relative; height: 280px;">
+          <canvas id="invoiceTypeChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- ========== LISTS ========== -->
+  <div class="row">
+    <!-- Low Stock -->
+    <div class="col-lg-4 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="card-title mb-0">Low Stock Alerts</h4>
+            <a href="{% url 'stock_levels' %}?low_stock=1" class="btn btn-sm btn-outline-danger">View All</a>
+          </div>
+          {% if low_stock_list %}
+            <div class="table-responsive">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th class="text-right">Qty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in low_stock_list %}
+                  <tr>
+                    <td>
+                      {{ item.name }}
+                      {% if item.store %}<br><small class="text-muted">{{ item.store }}</small>{% endif %}
+                    </td>
+                    <td class="text-right">
+                      <span class="badge badge-danger">{{ item.qty }}</span>
+                      <small class="text-muted">/ {{ item.reorder }}</small>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">No low stock items</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Sales -->
+    <div class="col-lg-4 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="card-title mb-0">Recent Sales</h4>
+            <a href="{% url 'sales_history' %}" class="btn btn-sm btn-outline-primary">View All</a>
+          </div>
+          {% if recent_sales %}
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th class="text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for sale in recent_sales %}
+                  <tr>
+                    <td><a href="{% url 'sale_detail' sale.id %}">#{{ sale.id }}</a></td>
+                    <td>{{ sale.sale_date|date:"d M" }}</td>
+                    <td class="text-right">{{ sale.total_amount|floatformat:0|intcomma }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">No sales yet</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Documents -->
+    <div class="col-lg-4 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="card-title mb-0">Recent Documents</h4>
+            <a href="{% url 'invoices:invoice_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+          </div>
+          {% if recent_invoices %}
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Number</th>
+                    <th>Type</th>
+                    <th class="text-right">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for inv in recent_invoices %}
+                  <tr>
+                    <td><a href="{% url 'invoices:invoice_detail' inv.pk %}">{{ inv.number }}</a></td>
+                    <td><span class="badge badge-primary">{{ inv.doc_type|title }}</span></td>
+                    <td class="text-right">{{ inv.issue_date|date:"d M" }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">No documents yet</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% endif %}
+</div>
+
+<!-- Chart Data -->
+<script type="application/json" id="sales-labels-data">{{ sales_labels|safe }}</script>
+<script type="application/json" id="sales-data-data">{{ sales_data|safe }}</script>
+
+<script type="application/json" id="stock-labels-data">{{ stock_status_labels|safe }}</script>
+<script type="application/json" id="stock-data-data">{{ stock_status_data|safe }}</script>
+
+<script type="application/json" id="top-labels-data">{{ top_product_labels|safe }}</script>
+<script type="application/json" id="top-data-data">{{ top_product_data|safe }}</script>
+
+<script type="application/json" id="customer-labels-data">{{ customer_type_labels|safe }}</script>
+<script type="application/json" id="customer-data-data">{{ customer_type_data|safe }}</script>
+
+<script type="application/json" id="invoice-labels-data">{{ invoice_type_labels|safe }}</script>
+<script type="application/json" id="invoice-data-data">{{ invoice_type_data|safe }}</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  'use strict';
+
+  function getData(id, fallback) {
+    try {
+      var el = document.getElementById(id);
+      if (!el) return fallback;
+      return JSON.parse(el.textContent);
+    } catch (e) {
+      console.warn('Chart data error for', id, e);
+      return fallback;
+    }
+  }
+
+  // ========== Line/Bar Options (sample style) ==========
+  var lineBarOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    legend: { display: false },
+    elements: { point: { radius: 0 } },
+    scales: {
+      yAxes: [{
+        ticks: { beginAtZero: true },
+        gridLines: { color: "rgba(204, 204, 204, 0.1)" }
+      }],
+      xAxes: [{
+        gridLines: { color: "rgba(204, 204, 204, 0.1)" }
+      }]
+    }
+  };
+
+  // ========== Doughnut/Pie Options (sample style) ==========
+  var doughnutPieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { animateScale: true, animateRotate: true }
+  };
+
+  // ========== Colour palette helpers ==========
+  var baseColors = [
+    'rgba(88, 124, 228, ',   // primary blue
+    'rgba(40, 167, 69, ',    // success green
+    'rgba(220, 53, 69, ',    // danger red
+    'rgba(255, 193, 7, ',    // warning yellow
+    'rgba(23, 162, 184, ',   // info teal
+    'rgba(153, 102, 255, ',  // purple
+  ];
+
+  function bgColor(i)   { return baseColors[i % baseColors.length] + '0.5)'; }
+  function borderColor(i) { return baseColors[i % baseColors.length] + '1)'; }
+
+  function makePalette(count) {
+    var bg = [], bd = [];
+    for (var i = 0; i < count; i++) { bg.push(bgColor(i)); bd.push(borderColor(i)); }
+    return { bg: bg, bd: bd };
+  }
+
+  // ========== 1. Sales Trend (Line — sample style) ==========
+  if ($("#salesTrendChart").length) {
+    var salesLabels = getData('sales-labels-data', []);
+    var salesData   = getData('sales-data-data', []);
+
+    new Chart($("#salesTrendChart").get(0).getContext("2d"), {
+      type: 'line',
+      data: {
+        labels: salesLabels,
+        datasets: [{
+          label: 'Sales',
+          data: salesData,
+          borderColor: 'rgba(88, 124, 228, 1)',
+          backgroundColor: 'rgb(139, 139, 138)',
+          borderWidth: 2,
+          fill: true
+        }]
+      },
+      options: lineBarOptions
+    });
+  }
+
+  // ========== 2. Stock Status (Doughnut — sample style) ==========
+  if ($("#stockStatusChart").length) {
+    var pal = makePalette(3);
+    new Chart($("#stockStatusChart").get(0).getContext("2d"), {
+      type: 'doughnut',
+      data: {
+        labels: getData('stock-labels-data', ['In Stock', 'Low Stock', 'Out of Stock']),
+        datasets: [{
+          data: getData('stock-data-data', [0, 0, 0]),
+          backgroundColor: pal.bg,
+          borderColor: pal.bd,
+          borderWidth: 0
+        }]
+      },
+      options: doughnutPieOptions
+    });
+  }
+
+  // ========== 3. Top Products (Bar — sample style, per-bar colours) ==========
+  if ($("#topProductsChart").length) {
+    var topLabels = getData('top-labels-data', []);
+    var topData   = getData('top-data-data', []);
+    var barPal    = makePalette(topData.length);
+
+    new Chart($("#topProductsChart").get(0).getContext("2d"), {
+      type: 'bar',
+      data: {
+        labels: topLabels,
+        datasets: [{
+          label: 'Qty Sold',
+          data: topData,
+          backgroundColor: barPal.bg,
+          borderColor: barPal.bd,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        legend: { display: false },
+        scales: {
+          yAxes: [{
+            ticks: { beginAtZero: true },
+            gridLines: { color: "rgba(204, 204, 204, 0.1)" }
+          }],
+          xAxes: [{
+            gridLines: { display: false }
+          }]
+        }
+      }
+    });
+  }
+
+  // ========== 4. Customer Types (Doughnut — sample style) ==========
+  if ($("#customerTypeChart").length) {
+    var custPal = makePalette(4);
+    new Chart($("#customerTypeChart").get(0).getContext("2d"), {
+      type: 'doughnut',
+      data: {
+        labels: getData('customer-labels-data', ['Company', 'Individual', 'Group', 'School']),
+        datasets: [{
+          data: getData('customer-data-data', [0, 0, 0, 0]),
+          backgroundColor: custPal.bg,
+          borderColor: custPal.bd,
+          borderWidth: 0
+        }]
+      },
+      options: doughnutPieOptions
+    });
+  }
+
+  // ========== 5. Documents (Pie — sample style) ==========
+  if ($("#invoiceTypeChart").length) {
+    var invPal = makePalette(3);
+    new Chart($("#invoiceTypeChart").get(0).getContext("2d"), {
+      type: 'pie',
+      data: {
+        labels: getData('invoice-labels-data', ['Invoice', 'Proforma', 'Delivery']),
+        datasets: [{
+          data: getData('invoice-data-data', [0, 0, 0]),
+          backgroundColor: invPal.bg,
+          borderColor: invPal.bd,
+          borderWidth: 0
+        }]
+      },
+      options: doughnutPieOptions
+    });
+  }
+
+});
+</script>
+{% endblock %}

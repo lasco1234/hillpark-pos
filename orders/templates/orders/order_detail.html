@@ -1,0 +1,160 @@
+{% extends 'orders_layout.html' %}
+{% block title %}Order {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+        <div>
+            <h1 class="mb-1 responsive-title" style="color: #647688;">{{ order.order_number }}</h1>
+            <p class="text-muted mb-0">
+                {{ order.store.name }} · {{ order.created_at|date:"d M Y H:i" }} ·
+                <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+            </p>
+        </div>
+        <a href="{% url 'orders:order_list' %}" class="btn btn-light border">← Back</a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Order info -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4 text-white" >
+                    <h5 class="fw-bold">Supplier</h5>
+                    <p class="mb-1"><strong>{{ order.supplier_name }}</strong></p>
+                    <p class="mb-1 text-muted">Email: {{ order.supplier_email|default:"—" }}</p>
+                    <p class="mb-0 text-muted">Phone: {{ order.supplier_phone|default:"—" }}</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Items</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items.all %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        {{ item.product_name }}
+                                        {% if item.is_new_product %}<span class="badge bg-info">NEW</span>{% endif %}
+                                        {% if item.description %}<br><small class="text-muted">{{ item.description }}</small>{% endif %}
+                                    </td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td class="text-end">{{ item.unit_price|floatformat:0 }}</td>
+                                    <td class="text-end">{{ item.line_total|floatformat:0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="fw-bold table-success">
+                                    <td colspan="4">TOTAL</td>
+                                    <td class="text-end">{{ order.total_amount|floatformat:0 }} TZS</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    {% if order.notes %}
+                    <p class="mt-3 mb-0"><strong>Notes:</strong> {{ order.notes }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Actions</h5>
+
+                    <!-- Preview -->
+                    <button type="button" class="btn btn-outline-secondary w-100 mb-2"
+                            data-bs-toggle="modal" data-bs-target="#previewModal">
+                        Preview Order
+                    </button>
+
+                    <!-- PDF -->
+                    <a href="{% url 'orders:order_pdf' order.pk %}" class="btn btn-danger w-100 mb-2">
+                        Download PDF
+                    </a>
+
+                    <!-- WhatsApp -->
+                    {% if wa_link %}
+                    <a href="{{ wa_link }}" target="_blank" rel="noopener"
+                       class="btn btn-success w-100 mb-2"
+                       onclick="markSent()">
+                        Send via WhatsApp
+                    </a>
+                    {% else %}
+                    <button class="btn btn-success w-100 mb-2" disabled title="Add supplier phone first">
+                        Send via WhatsApp (no phone)
+                    </button>
+                    {% endif %}
+
+                    <!-- Email -->
+                    {% if order.supplier_email %}
+                    <form method="post" action="{% url 'orders:order_send_email' order.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn text-white w-100 mb-2" style="background:#647688;">
+                            Send via Email
+                        </button>
+                    </form>
+                    {% else %}
+                    <button class="btn btn-secondary w-100 mb-2" disabled title="Add supplier email first">
+                        Send via Email (no email)
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Preview — {{ order.order_number }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre style="white-space:pre-wrap; font-family:inherit; margin:0;">{{ preview_text }}</pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Close</button>
+                <a href="{% url 'orders:order_pdf' order.pk %}" class="btn btn-danger">Download PDF</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function markSent() {
+    fetch("{% url 'orders:order_mark_sent' order.pk %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+        }
+    });
+}
+</script>
+{% endblock %}

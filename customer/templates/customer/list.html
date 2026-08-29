@@ -1,0 +1,43 @@
+<div class="container-fluid my-5">
+    <div class="card shadow-sm border-0 shadow-lg" style="background-color: #647688; border-radius: 10px;">
+        <div class="card-header">
+            <h5 class="mb-0">Customer List</h5>
+        </div>
+        <div class="card-body">
+            <!-- Filter buttons remain the same -->
+
+            <div class="table-responsive">
+                <table class="table align-middle table-hover text-light">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Shop</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Customer Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><strong>{{ customer.store.name }}</strong></td>
+                            <td>{{ customer.first_name }}</td>
+                            <td>{{ customer.last_name|default:"—" }}</td>
+                            <td>{{ customer.phone }}</td>
+                            <td>{{ customer.email|default:"—" }}</td>
+                            <td>{{ customer.customer_type }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">No customers found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,451 @@
+{% extends 'invoices_layout.html' %}
+{% block title %}New Document{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-1 responsive-title" style="color: #647688;">Create Document</h1>
+    <p class="text-muted mb-4">Proforma · Tax Invoice · Delivery Note — Hillpark Computers</p>
+
+    <form method="post" id="invoice-form">
+        {% csrf_token %}
+
+        {% if stores|length > 1 %}
+        <div class="mb-3 col-md-4">
+            <label class="form-label fw-semibold text-muted">Shop</label>
+            <select name="store_id" class="form-select"
+                    onchange="location.href='?store_id='+this.value+'&type={{ default_type }}'">
+                {% for s in stores %}
+                <option value="{{ s.pk }}" {% if store and store.pk == s.pk %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% elif store %}
+        <input type="hidden" name="store_id" value="{{ store.pk }}">
+        {% endif %}
+
+        <!-- Document type & dates -->
+        <div class="card border-0 shadow-sm mb-4" style="background-color: #647688;">
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Document type</label>
+                        <select name="doc_type" class="form-select" id="doc_type">
+                            <option value="proforma" {% if default_type == 'proforma' %}selected{% endif %}>Proforma Invoice</option>
+                            <option value="invoice" {% if default_type == 'invoice' %}selected{% endif %}>Tax Invoice</option>
+                            <option value="delivery" {% if default_type == 'delivery' %}selected{% endif %}>Delivery Note</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Issue date</label>
+                        <input type="date" name="issue_date" class="form-control" value="{{ today }}"
+                               style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                    <div class="col-md-3 field-due-date">
+                        <label class="form-label">Due date</label>
+                        <input type="date" name="due_date" class="form-control"
+                               style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Delivery date</label>
+                        <input type="date" name="delivery_date" class="form-control"
+                               style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer -->
+        <div class="card border-0 shadow-sm mb-4" style="background-color: #647688;">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">Customer</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" name="customer_name" class="form-control" required
+                               style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="customer_phone" class="form-control"
+                               style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="customer_email" class="form-control"
+                               style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Address</label>
+                        <textarea name="customer_address" class="form-control" rows="2"
+                                  style="background-color: rgb(231, 235, 235); color: black;"></textarea>
+                    </div>
+                    <div class="col-md-3 field-tin">
+                        <label class="form-label">Customer TIN</label>
+                        <input type="text" name="customer_tin" class="form-control"
+                               style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Reference / PO #</label>
+                        <input type="text" name="reference" class="form-control"
+                               style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products from stock (SEARCHABLE) -->
+        <div class="card border-0 shadow-sm mb-4" style="background-color: #647688;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0">Products from stock</h5>
+                        <small class="text-muted">Items already registered in the system</small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addProductRow()">+ Add</button>
+                </div>
+
+                <div id="product-rows">
+                    <!-- First row -->
+                    <div class="product-row row g-2 mb-2 align-items-end">
+                        <div class="col-md-5 position-relative">
+                            <label class="form-label small">Product</label>
+                            <input type="text"
+                                   class="form-control form-control-sm product-search"
+                                   placeholder="Search product..."
+                                   autocomplete="off"
+                                   style="background-color: rgb(231, 235, 235); color: black;">
+                            <input type="hidden" name="product_id" class="product-id-input" value="">
+                            <div class="product-dropdown position-absolute w-100 bg-white border rounded shadow-lg"
+                                 style="z-index: 1050; max-height: 260px; overflow-y: auto; display: none;"></div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Qty</label>
+                            <input type="number" name="product_qty" class="form-control form-control-sm"
+                                   min="1" value="1"
+                                   style="background-color: rgb(231, 235, 235); color: black;">
+                        </div>
+                        <div class="col-md-3 money-field">
+                            <label class="form-label small">Unit price</label>
+                            <input type="text"
+                                   name="product_price"
+                                   class="form-control form-control-sm product-price"
+                                   placeholder="Auto"
+                                   inputmode="numeric"
+                                   style="background-color: rgb(231, 235, 235); color: black;">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    onclick="this.closest('.product-row').remove()">✕</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New / unregistered items -->
+        <div class="card border-0 shadow-sm mb-4" style="background-color: #647688;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0">New / unregistered items</h5>
+                        <small class="text-muted">
+                            Items not in the system — type name, qty and price. They only appear on this document.
+                        </small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addCustomRow()">+ Add</button>
+                </div>
+
+                <div id="custom-rows">
+                    <div class="custom-row row g-2 mb-2 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label small">Item name</label>
+                            <input type="text" name="custom_desc" class="form-control form-control-sm"
+                                   placeholder="e.g. HDMI Cable 2m"
+                                   style="background-color: rgb(231, 235, 235); color: black;">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Qty</label>
+                            <input type="number" name="custom_qty" class="form-control form-control-sm"
+                                   min="1" value="1"
+                                   style="background-color: rgb(231, 235, 235); color: black;">
+                        </div>
+                        <div class="col-md-3 money-field">
+                            <label class="form-label small">Unit price</label>
+                            <input type="text" name="custom_price" class="form-control form-control-sm"
+                                   inputmode="numeric" value="0"
+                                   style="background-color: rgb(231, 235, 235); color: black;">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    onclick="this.closest('.custom-row').remove()">✕</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Money, bank, notes (hidden for delivery note) -->
+        <div class="card border-0 shadow-sm mb-4 money-section" style="background-color: #647688;">
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Tax %</label>
+                        <input type="number" name="tax_percent" class="form-control" value="0" step="0.01" min="0"
+                               style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Discount (TZS)</label>
+                        <input type="number" name="discount" class="form-control" value="0" step="1" min="0"
+                               style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Amount paid</label>
+                        <input type="number" name="amount_paid" class="form-control" value="0" step="1" min="0"
+                               style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                    <div class="col-md-3 field-bank">
+                        <label class="form-label">Bank account number</label>
+                        <input type="text" name="bank_account" class="form-control"
+                               placeholder="e.g. 015XXXXXXX (NMB / CRDB)"
+                               style="background-color: rgb(231, 235, 235); color: black;">
+                        <div class="form-text">Shown on Tax Invoice PDF</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="2"
+                                  style="background-color: rgb(231, 235, 235); color: black;"></textarea>
+                    </div>
+                    <div class="col-md-6 field-terms">
+                        <label class="form-label">Terms</label>
+                        <textarea name="terms" class="form-control" rows="2"
+                                  style="background-color: rgb(231, 235, 235); color: black;">Payment is due within the stated period. Goods remain the property of Hillpark Computers until paid in full.</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes only (for delivery note) -->
+        <div class="card border-0 shadow-sm mb-4 delivery-notes-only" style="display:none;">
+            <div class="card-body p-4">
+                <label class="form-label">Notes</label>
+                <textarea name="notes_delivery" id="notes_delivery" class="form-control text-light" rows="2"
+                          placeholder="Delivery remarks..."></textarea>
+            </div>
+        </div>
+
+        <button type="submit" class="btn text-white px-4" style="background:#647688;">Create &amp; Issue</button>
+        <a href="{% url 'invoices:invoice_list' %}" class="btn btn-light border">Cancel</a>
+    </form>
+</div>
+
+<script>
+/* ========== Product data from backend ========== */
+const allProducts = [
+    {% for p in products %}
+    {
+        id: {{ p.pk }},
+        name: "{{ p.product_name|escapejs }}",
+        price: {{ p.sell_price|default:0 }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+/* ========== Search helpers ========== */
+function filterProducts(term) {
+    const q = (term || '').toLowerCase().trim();
+    if (!q) return allProducts.slice(0, 40);
+    return allProducts.filter(p => p.name.toLowerCase().includes(q)).slice(0, 40);
+}
+
+function renderProductDropdown(row, products) {
+    const dropdown = row.querySelector('.product-dropdown');
+    dropdown.innerHTML = '';
+
+    if (products.length === 0) {
+        dropdown.innerHTML = '<div class="p-2 text-muted text-center small">No products found</div>';
+        dropdown.style.display = 'block';
+        return;
+    }
+
+    products.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'px-3 py-2';
+        item.style.cursor = 'pointer';
+        item.innerHTML = `
+            <div class="fw-semibold text-dark">${p.name}</div>
+            <small class="text-muted">Tsh ${Number(p.price).toLocaleString()}</small>
+        `;
+        item.addEventListener('mouseenter', () => item.style.backgroundColor = '#f1f3f5');
+        item.addEventListener('mouseleave', () => item.style.backgroundColor = '');
+        item.addEventListener('click', () => selectProduct(row, p));
+        dropdown.appendChild(item);
+    });
+    dropdown.style.display = 'block';
+}
+
+function selectProduct(row, product) {
+    row.querySelector('.product-search').value = product.name;
+    row.querySelector('.product-id-input').value = product.id;
+
+    // Humanized price: 1500000 → 1,500,000
+    const price = Math.round(product.price || 0);
+    row.querySelector('.product-price').value = price.toLocaleString('en-US');
+
+    row.querySelector('.product-dropdown').style.display = 'none';
+}
+
+function attachSearchEvents(row) {
+    const input = row.querySelector('.product-search');
+
+    input.addEventListener('input', function () {
+        renderProductDropdown(row, filterProducts(this.value));
+    });
+
+    input.addEventListener('focus', function () {
+        renderProductDropdown(row, filterProducts(this.value));
+    });
+}
+
+/* Close dropdown when clicking outside */
+document.addEventListener('click', function (e) {
+    document.querySelectorAll('.product-dropdown').forEach(dd => {
+        if (!dd.parentElement.contains(e.target)) {
+            dd.style.display = 'none';
+        }
+    });
+});
+
+/* ========== Add product row ========== */
+function addProductRow() {
+    const html = `
+    <div class="product-row row g-2 mb-2 align-items-end">
+        <div class="col-md-5 position-relative">
+            <input type="text"
+                   class="form-control form-control-sm product-search"
+                   placeholder="Search product..."
+                   autocomplete="off"
+                   style="background-color: rgb(231, 235, 235); color: black;">
+            <input type="hidden" name="product_id" class="product-id-input" value="">
+            <div class="product-dropdown position-absolute w-100 bg-white border rounded shadow-lg"
+                 style="z-index: 1050; max-height: 260px; overflow-y: auto; display: none;"></div>
+        </div>
+        <div class="col-md-2">
+            <input type="number" name="product_qty" class="form-control form-control-sm"
+                   min="1" value="1"
+                   style="background-color: rgb(231, 235, 235); color: black;">
+        </div>
+        <div class="col-md-3 money-field">
+            <input type="text"
+                   name="product_price"
+                   class="form-control form-control-sm product-price"
+                   placeholder="Unit price"
+                   inputmode="numeric"
+                   style="background-color: rgb(231, 235, 235); color: black;">
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    onclick="this.closest('.product-row').remove()">✕</button>
+        </div>
+    </div>`;
+    document.getElementById('product-rows').insertAdjacentHTML('beforeend', html);
+
+    const newRow = document.getElementById('product-rows').lastElementChild;
+    attachSearchEvents(newRow);
+    toggleDeliveryFields();
+}
+
+/* ========== Custom rows ========== */
+function addCustomRow() {
+    document.getElementById('custom-rows').insertAdjacentHTML('beforeend', `
+    <div class="custom-row row g-2 mb-2 align-items-end">
+        <div class="col-md-5">
+            <input type="text" name="custom_desc" class="form-control form-control-sm"
+                   placeholder="e.g. HDMI Cable 2m"
+                   style="background-color: rgb(231, 235, 235); color: black;">
+        </div>
+        <div class="col-md-2">
+            <input type="number" name="custom_qty" class="form-control form-control-sm"
+                   min="1" value="1"
+                   style="background-color: rgb(231, 235, 235); color: black;">
+        </div>
+        <div class="col-md-3 money-field">
+            <input type="text" name="custom_price" class="form-control form-control-sm"
+                   inputmode="numeric" value="0"
+                   style="background-color: rgb(231, 235, 235); color: black;">
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    onclick="this.closest('.custom-row').remove()">✕</button>
+        </div>
+    </div>`);
+    toggleDeliveryFields();
+}
+
+/* ========== Delivery note toggle ========== */
+function toggleDeliveryFields() {
+    const typeEl = document.getElementById('doc_type');
+    const type = typeEl ? typeEl.value : 'invoice';
+    const isDelivery = type === 'delivery';
+
+    document.querySelectorAll('.money-field, .money-section, .field-due-date, .field-tin, .field-bank, .field-terms')
+        .forEach(el => { el.style.display = isDelivery ? 'none' : ''; });
+
+    const dnNotes = document.querySelector('.delivery-notes-only');
+    if (dnNotes) dnNotes.style.display = isDelivery ? '' : 'none';
+
+    if (isDelivery) {
+        ['tax_percent', 'discount', 'amount_paid'].forEach(name => {
+            const inp = document.querySelector('[name="' + name + '"]');
+            if (inp) inp.value = '0';
+        });
+        document.querySelectorAll('[name="product_price"], [name="custom_price"]').forEach(inp => {
+            inp.value = '0';
+        });
+        const bank = document.querySelector('[name="bank_account"]');
+        if (bank) bank.value = '';
+        const due = document.querySelector('[name="due_date"]');
+        if (due) due.value = '';
+    }
+}
+
+/* ========== Form submit: strip commas + delivery notes ========== */
+document.getElementById('invoice-form').addEventListener('submit', function () {
+    // Remove commas so backend receives clean numbers
+    document.querySelectorAll('.product-price, [name="custom_price"]').forEach(inp => {
+        if (inp.value) {
+            inp.value = inp.value.replace(/,/g, '');
+        }
+    });
+
+    // Delivery note notes handling
+    const type = document.getElementById('doc_type').value;
+    if (type === 'delivery') {
+        const extra = document.getElementById('notes_delivery');
+        const main = document.querySelector('.money-section [name="notes"]');
+        if (extra && main && extra.value.trim()) {
+            main.value = extra.value.trim();
+        } else if (extra && extra.value.trim()) {
+            let h = document.querySelector('input[name="notes"][type="hidden"]');
+            if (!h) {
+                h = document.createElement('input');
+                h.type = 'hidden';
+                h.name = 'notes';
+                this.appendChild(h);
+            }
+            h.value = extra.value.trim();
+        }
+    }
+});
+
+/* ========== Init ========== */
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.product-row').forEach(row => attachSearchEvents(row));
+
+    const docType = document.getElementById('doc_type');
+    if (docType) {
+        docType.addEventListener('change', toggleDeliveryFields);
+        toggleDeliveryFields();
+    }
+});
+</script>
+{% endblock %}

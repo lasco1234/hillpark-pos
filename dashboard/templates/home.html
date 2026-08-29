@@ -1,0 +1,171 @@
+{% extends 'layout.html' %}
+
+
+{% block title %}
+    home
+{% endblock title %}
+    
+
+{% block content %}
+  <div class="content-wrapper px-2 py-3 mobile-content">
+    <div class="row mx-0 px-0">
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card"> 
+            <a href="{% url 'pos_home' %}" class="text-decoration-none text-reset w-100">
+          <div class="card card-trans pt-5 bg-gray-dark ">
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <svg class="css-1tijts4" viewBox="0 0 24 24">
+                    <path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2zM4 6h16v10H4z"></path>
+                </svg>         
+            </div>
+            <div class="card-footer mt-5 p-0 d-flex justify-content-center align-items-center" style="background-color: rgb(2, 18, 31);">
+                <h4>Pos</h4>
+            </div>
+          </div>
+          </a>
+        </div>
+
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <a href="{% url 'sales_history' %}" class="text-decoration-none text-reset w-100">
+          <div class="card pt-5 card-trans bg-gray-dark ">
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <svg class="css-1tijts4" viewBox="0 0 24 24">
+                    <path d="m16 6 2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"></path>
+                </svg>
+            </div>
+            <div class="card-footer mt-5 p-0 d-flex justify-content-center align-items-center" style="background-color: rgb(2, 18, 31);">
+                <h4>Sales</h4>
+            </div>
+            
+          </div>
+          </a>
+        </div>
+
+         <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <a href="{% url 'orders:order_list' %}" class="text-decoration-none text-reset w-100">
+          <div class="card pt-5 bg-gray-dark card-trans">
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <svg class="css-1tijts4" viewBox="0 0 24 24">
+                    <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2M1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2"></path>
+                </svg>
+            </div>
+            <div class="card-footer mt-5 p-0 d-flex justify-content-center align-items-center" style="background-color: rgb(2, 18, 31);">
+                <h4>Orders</h4>
+            </div>
+          </div>
+          </a>
+        </div>
+
+         <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <a href="{% url 'store_home' %}" class="text-decoration-none text-reset w-100">
+          <div class="card pt-5 bg-gray-dark card-trans">
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <svg class="css-1tijts4" viewBox="0 0 24 24">
+                    <path d="M20 4H4v2h16zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6zm-9 4H6v-4h6z"></path>
+                </svg>
+            </div>
+            <div class="card-footer mt-5 p-0 d-flex justify-content-center align-items-center" style="background-color: rgb(2, 18, 31);">
+                <h4>Store</h4>
+            </div>
+          </div>
+          </a>
+        </div>
+
+          <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <a href="{% url 'expenses:expenses' %}" class="text-decoration-none text-reset w-100">
+                <div class="card pt-5 bg-gray-dark card-trans">
+                    <div class="card-body d-flex justify-content-center align-items-center">
+                        <svg class="css-1tijts4" viewBox="0 0 24 24">
+                            <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2zm-9-2h10V8H12zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5"></path>
+                        </svg>
+                    </div>
+                    <div class="card-footer mt-5 p-0 d-flex justify-content-center align-items-center" style="background-color: rgb(2, 18, 31);">
+                        <h4>Expenses</h4>
+                    </div>
+                </div>
+          </a>
+        </div>
+
+          <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <a href="{% url 'invoices:invoice_create' %}" class="text-decoration-none text-reset w-100">
+          <div class="card pt-5 bg-gray-dark card-trans">
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <svg class="css-1tijts4" viewBox="0 0 24 24">
+                    <path d="M18 17H6v-2h12zm0-4H6v-2h12zm0-4H6V7h12zM3 22l1.5-1.5L6 22l1.5-1.5L9 22l1.5-1.5L12 22l1.5-1.5L15 22l1.5-1.5L18 22l1.5-1.5L21 22V2l-1.5 1.5L18 2l-1.5 1.5L15 2l-1.5 1.5L12 2l-1.5 1.5L9 2 7.5 3.5 6 2 4.5 3.5 3 2z"></path>
+                </svg>
+            </div>
+            <div class="card-footer mt-5 p-0 d-flex justify-content-center align-items-center" style="background-color: rgb(2, 18, 31);">
+                <h4>Invorce</h4>
+            </div>
+          </div>
+          </a>
+        </div>
+
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <a href="{% url 'reports:daily_report' %}" class="text-decoration-none text-reset w-100">
+          <div class="card pt-5 bg-gray-dark card-trans">
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <svg class="css-1tijts4" viewBox="0 0 24 24">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2M9 17H7v-7h2zm4 0h-2V7h2zm4 0h-2v-4h2z"></path>
+                </svg>
+            </div>
+            <div class="card-footer mt-5 p-0 d-flex justify-content-center align-items-center" style="background-color: rgb(2, 18, 31);">
+                <h4>Report</h4>
+            </div>
+          </div>
+          </a>
+        </div>
+
+          <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <a href="{% url 'add_customer' %}" class="text-decoration-none text-reset w-100">
+                <div class="card pt-5 bg-gray-dark card-trans">
+                    <div class="card-body d-flex justify-content-center align-items-center">
+                        <svg class="css-1tijts4" viewBox="0 0 24 24">
+                            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3m-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3m0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5m8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5"></path>
+                        </svg>
+                    </div>
+                    <div class="card-footer mt-5 p-0 d-flex justify-content-center align-items-center" style="background-color: rgb(2, 18, 31);">
+                        <h4>Customers</h4>
+                    </div>
+                </div>
+          </a>
+        </div>
+
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <a href="{% url 'installment:installment_list' %}" class="text-decoration-none text-reset w-100">
+                <div class="card pt-5 bg-gray-dark card-trans">
+                    <div class="card-body d-flex justify-content-center align-items-center">
+                        <svg class="css-1tijts4" viewBox="0 0 24 24">
+                            <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+                        </svg>
+                    </div>
+                    <div class="card-footer mt-5 p-0 d-flex justify-content-center align-items-center" style="background-color: rgb(2, 18, 31);">
+                        <h4>Installments</h4>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+            <a href="{% url 'settings:home' %}" class="text-decoration-none text-reset w-100">
+                <div class="card pt-5 bg-gray-dark card-trans">
+                    <div class="card-body d-flex justify-content-center align-items-center">
+                        <svg class="css-1tijts4" viewBox="0 0 24 24">
+                            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h4.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6"></path>
+                        </svg>
+                    </div>
+                    <div class="card-footer mt-5 p-0 d-flex justify-content-center align-items-center" style="background-color: rgb(2, 18, 31);">
+                        <h4>Settings</h4>
+                    </div>
+                </div>
+          </a>
+        </div>
+
+      
+    </div>
+  </div>
+
+  <div>
+
+  </div>    
+  
+{% endblock content %}
+    

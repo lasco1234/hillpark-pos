@@ -1,0 +1,282 @@
+{% extends 'reports_layout.html' %}
+{% block title %}Daily Report{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="card border-0 shadow-sm mb-4" style="background:#fcfdff; border-radius:10px;">
+        <div class="card-body p-4">
+            <h1 class="mb-1 responsive-title" style="color: #647688;">Daily Sales Report</h1>
+            <p class="text-muted mb-4">
+                Enter expenses, bank deposit, advances, maintenance income & comments — then download Excel / PDF / Word
+            </p>
+
+            <form method="get" class="row g-3 align-items-end mb-4">
+                {% if stores|length > 1 %}
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold text-muted">Shop</label>
+                    <select name="store_id" class="form-select" onchange="this.form.submit()">
+                        {% for s in stores %}
+                        <option value="{{ s.pk }}" {% if store and store.pk == s.pk %}selected{% endif %}>{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% else %}
+                <input type="hidden" name="store_id" value="{{ store.pk }}">
+                {% endif %}
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-black">Date</label>
+                    <input type="date" name="date" class="form-control" value="{{ report_date }}" onchange="this.form.submit()" style="background-color: rgb(231, 235, 235); color: black; border: none;">
+                </div>
+            </form>
+
+            {% if store and data %}
+            <!-- Summary cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded-3" style="background:#7b8b7d;">
+                        <small class="text-light">Today's Sales</small>
+                        <h5 class="mb-0">{{ data.total_sales|floatformat:0 }} TZS</h5>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded-3" style="background:#bbb2a4;">
+                        <small class="text-light">Gross Profit</small>
+                        <h5 class="mb-0">{{ data.total_profit|floatformat:0 }} TZS</h5>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded-3" style="background:#a2afb8;">
+                        <small class="text-light">Opening Stock</small>
+                        <h5 class="mb-0">{{ data.opening_stock|floatformat:0 }} TZS</h5>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded-3" style="background:#dbc6cd;">
+                        <small class="text-light">Cash in Hand (auto)</small>
+                        <h5 class="mb-0">{{ data.cash_in_hand|floatformat:0 }} TZS</h5>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'reports:save_daily_data' %}" id="day-form">
+                {% csrf_token %}
+                <input type="hidden" name="store_id" value="{{ store.pk }}">
+                <input type="hidden" name="date" value="{{ report_date }}">
+
+                <div class="row g-4">
+                    <!-- MULTIPLE EXPENSES -->
+                    <div class="col-md-6">
+                        <div class="card border rounded-4 p-3 h-100" style="background:#647688;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="text-white fw-bold mb-0">Daily Expenses</h6>
+                                <button type="button" class="btn btn-sm btn-light" onclick="addExpenseRow()">+ Add</button>
+                            </div>
+                            <div id="expense-rows">
+                                <div class="expense-row row g-2 mb-2">
+                                    <div class="col-5">
+                                        <input type="number" name="expense_amount" class="form-control form-control-sm"
+                                               placeholder="Amount" step="1" min="0" style="background-color: rgb(231, 235, 235); color: black; border: none;">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="text" name="expense_purpose" class="form-control form-control-sm"
+                                               placeholder="Purpose e.g. Lunch" style="background-color: rgb(231, 235, 235); color: black; border: none;">
+                                    </div>
+                                    <div class="col-1 d-flex align-items-center">
+                                        <button type="button" class="btn btn-sm btn-outline-light" onclick="this.closest('.expense-row').remove()">✕</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MULTIPLE COMMENTS -->
+                    <div class="col-md-6">
+                        <div class="card border rounded-4 p-3 h-100" style="background:#647688;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="text-white fw-bold mb-0">Comments</h6>
+                                <button type="button" class="btn btn-sm btn-light" onclick="addNoteRow()">+ Add</button>
+                            </div>
+                            <div id="note-rows">
+                                <div class="note-row mb-2">
+                                    <div class="input-group input-group-sm">
+                                        <textarea name="note_text" class="form-control" rows="2"
+                                                  placeholder="e.g. Paid 20,000 via mobile for crimping tools" style="background-color: rgb(231, 235, 235); color: black; border: none;"></textarea>
+                                        <button type="button" class="btn btn-outline-light"
+                                                onclick="this.closest('.note-row').remove()">✕</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BANK & CASH -->
+                    <div class="col-md-6">
+                        <div class="card border rounded-4 p-3 h-100" style="background:#647688;">
+                            <h6 class="text-white fw-bold">Bank & Cash</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="text-white small">Opening Balance</label>
+                                    <input type="number" name="opening_balance" class="form-control form-control-sm"
+                                           value="{{ closing.opening_balance|default:'' }}" placeholder="0" step="1" style="background-color: rgb(231, 235, 235); color: black; border: none;">
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-white small">Bank Deposit</label>
+                                    <input type="number" name="bank_total" class="form-control form-control-sm"
+                                           value="{{ closing.bank_total|default:'' }}" placeholder="0" step="1" style="background-color: rgb(231, 235, 235); color: black; border: none;">
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-white small">Mobile Money (Lipa Namba)</label>
+                                    <input type="number" name="lipa_namba_total" class="form-control form-control-sm"
+                                           value="{{ closing.lipa_namba_total|default:'' }}" placeholder="0" step="1" style="background-color: rgb(231, 235, 235); color: black; border: none;">
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-white small">Cash in Hand</label>
+                                    <input type="text" class="form-control form-control-sm" readonly
+                                           style="background:#c5c9ce; border: none;"
+                                           value="{{ data.cash_in_hand|floatformat:0 }} (auto)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EXTRA INCOME -->
+                    <div class="col-md-6">
+                        <div class="card border rounded-4 p-3 h-100" style="background:#647688;">
+                            <h6 class="text-white fw-bold">Extra Income</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="text-white small">Advance Payments</label>
+                                    <input type="number" name="advance_payments" class="form-control form-control-sm"
+                                           value="{{ closing.advance_payments|default:'' }}"
+                                           placeholder="Customer advances" step="1" style="background-color: rgb(231, 235, 235); color: black; border: none;">
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-white small">Device Maintenance</label>
+                                    <input type="number" name="maintenance_income" class="form-control form-control-sm"
+                                           value="{{ closing.maintenance_income|default:'' }}"
+                                           placeholder="Repair income" step="1" style="background-color: rgb(231, 235, 235); color: black; border: none;">
+                                </div>
+                            </div>
+                            <p class="text-white-50 small mt-2 mb-0">
+                                Maintenance income is included in today's sales. Stock in/out is taken automatically from stock adjustments.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex flex-wrap gap-2 responsive-card">
+                    <button type="submit" class="btn text-white px-4" style="background:#647688;">
+                        Save Day Data
+                    </button>
+                    <a href="{% url 'reports:download_daily_report' %}?format=excel&date={{ report_date }}&store_id={{ store.pk }}"
+                       class="btn btn-success px-4 mx-1">Excel</a>
+                    <a href="{% url 'reports:download_daily_report' %}?format=pdf&date={{ report_date }}&store_id={{ store.pk }}"
+                       class="btn btn-danger px-4">PDF</a>
+                    <a href="{% url 'reports:download_daily_report' %}?format=word&date={{ report_date }}&store_id={{ store.pk }}"
+                       class="btn btn-primary px-4 mx-1">Word</a>
+                </div>
+            </form>
+
+            <!-- Already saved expenses -->
+            {% if cash_outs %}
+            <h6 class="fw-bold mt-4 text-muted">Saved Expenses</h6>
+            <table class="table table-sm">
+                <thead class="table-light"><tr><th>Amount</th><th>Purpose</th><th></th></tr></thead>
+                <tbody>
+                {% for c in cash_outs %}
+                <tr>
+                    <td>{{ c.amount|floatformat:0 }}</td>
+                    <td>{{ c.purpose }}</td>
+                    <td>
+                       {% if report_date == today %}
+                        <form method="post" action="{% url 'reports:delete_cash_out' c.pk %}"
+                            onsubmit="return confirm('Delete this expense?');" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">✕</button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            {% if notes %}
+            <h6 class="fw-bold mt-3 text-muted">Saved Comments</h6>
+            <ul class="list-group mb-3">
+                {% for n in notes %}
+                <li class="list-group-item d-flex justify-content-between text-muted">
+                    <span>{{ n.note }}</span>
+                    <form method="post" action="{% url 'reports:delete_note' n.pk %}"
+                          onsubmit="return confirm('Delete this comment?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">✕</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <!-- Auto stock info -->
+            <div class="alert alert-secondary mt-3">
+                <strong>Auto stock:</strong>
+                Stock In = {{ data.stock_in|floatformat:0 }} TZS &nbsp;|&nbsp;
+                Stock Out = {{ data.stock_out|floatformat:0 }} TZS &nbsp;|&nbsp;
+                Closing Stock = {{ data.closing_stock|floatformat:0 }} TZS
+                <br><small>Taken from Stock Adjustments (increase / decrease / transfer) on this date.</small>
+            </div>
+
+            {% else %}
+            <div class="alert alert-info">Select a store and date to continue.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function addExpenseRow() {
+    const html = `
+    <div class="expense-row row g-2 mb-2">
+        <div class="col-5">
+            <input type="number" name="expense_amount" class="form-control form-control-sm"
+                   placeholder="Amount" step="1" min="0">
+        </div>
+        <div class="col-6">
+            <input type="text" name="expense_purpose" class="form-control form-control-sm"
+                   placeholder="Purpose e.g. Lunch">
+        </div>
+        <div class="col-1 d-flex align-items-center">
+            <button type="button" class="btn btn-sm btn-outline-light"
+                    onclick="this.closest('.expense-row').remove()">✕</button>
+        </div>
+    </div>`;
+    document.getElementById('expense-rows').insertAdjacentHTML('beforeend', html);
+}
+
+function addNoteRow() {
+    const html = `
+    <div class="note-row mb-2">
+        <div class="input-group input-group-sm">
+            <textarea name="note_text" class="form-control" rows="2"
+                      placeholder="Add another comment..."></textarea>
+            <button type="button" class="btn btn-outline-light"
+                    onclick="this.closest('.note-row').remove()">✕</button>
+        </div>
+    </div>`;
+    document.getElementById('note-rows').insertAdjacentHTML('beforeend', html);
+}
+</script>
+{% endblock %}

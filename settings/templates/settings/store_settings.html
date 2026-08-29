@@ -1,0 +1,168 @@
+{% extends 'settings_layout.html' %}
+{% load static %}
+
+{% block title %}Store Settings - {{ store.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+          <li class="breadcrumb-item"><a href="{% url 'settings:home' %}">Settings</a></li>
+          <li class="breadcrumb-item active">{{ store.name }}</li>
+        </ol>
+      </nav>
+      <h3 class="mb-0 fw-bold" style="color: #647688;">Store Settings</h3>
+      <p class="text-muted mb-0">{{ store.name }}</p>
+    </div>
+    <a href="{% url 'settings:home' %}" class="btn btn-outline-secondary">
+      <i class="mdi mdi-arrow-left me-1"></i> Back
+    </a>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="row g-4">
+
+      <!-- Receipt Settings -->
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-semibold" style="color: #647688;"><i class="mdi mdi-receipt me-2"></i>Receipt Settings</h5>
+          </div>
+          <div class="card-body" style="background-color: #647688;">
+            <div class="mb-3">
+              <label class="form-label">Receipt Header</label>
+              {{ form.receipt_header }}
+              <div class="form-text">Appears at the top of printed receipts</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Receipt Footer</label>
+              {{ form.receipt_footer }}
+              <div class="form-text">Thank you message / return policy</div>
+            </div>
+            <div class="form-check form-switch mb-2">
+              {{ form.show_cashier_name }}
+              <label class="form-check-label text-secondary" for="{{ form.show_cashier_name.id_for_label }}">
+                Show Cashier Name on Receipt
+              </label>
+            </div>
+            <div class="form-check form-switch">
+              {{ form.show_tax_breakdown }}
+              <label class="form-check-label text-secondary" for="{{ form.show_tax_breakdown.id_for_label }}">
+                Show Tax Breakdown
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POS & Payments -->
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-semibold" style="color: #647688;"><i class="mdi mdi-cash-register me-2"></i>POS & Payments</h5>
+          </div>
+          <div class="card-body" style="background-color: #647688;">
+            <div class="mb-3">
+              <label class="form-label">Default Payment Method</label>
+              {{ form.default_payment_method }}
+            </div>
+            <div class="form-check form-switch mb-3">
+              {{ form.enable_tips }}
+              <label class="form-check-label text-secondary" for="{{ form.enable_tips.id_for_label }}">
+                Enable Tips
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory -->
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-semibold" style="color: #647688;"><i class="mdi mdi-package-variant-closed me-2"></i>Inventory</h5>
+          </div>
+          <div class="card-body" style="background-color: #647688;">
+            <div class="form-check form-switch mb-3">
+              {{ form.track_expiry }}
+              <label class="form-check-label text-secondary" for="{{ form.track_expiry.id_for_label }}">
+                Track Product Expiry Dates
+              </label>
+            </div>
+            <div class="form-check form-switch">
+              {{ form.allow_stock_transfer }}
+              <label class="form-check-label text-secondary" for="{{ form.allow_stock_transfer.id_for_label }}">
+                Allow Stock Transfer Between Stores
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-semibold" style="color: #647688;"><i class="mdi mdi-bell-outline me-2"></i>Notifications</h5>
+          </div>
+          <div class="card-body" style="background-color: #647688;">
+            <div class="form-check form-switch mb-3">
+              {{ form.low_stock_alert }}
+              <label class="form-check-label text-secondary" for="{{ form.low_stock_alert.id_for_label }}">
+                Low Stock Alerts
+              </label>
+            </div>
+            <div class="form-check form-switch mb-3">
+              {{ form.daily_sales_email }}
+              <label class="form-check-label text-secondary" for="{{ form.daily_sales_email.id_for_label }}">
+                Send Daily Sales Email
+              </label>
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-secondary">Notification Email</label>
+              {{ form.notification_email }}
+              <div class="form-text">Email address for alerts and daily reports</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Save Button -->
+    <div class="mt-4 d-flex justify-content-end gap-2">
+      <a href="{% url 'settings:home' %}" class="btn btn-light">Cancel</a>
+      <button type="submit" class="btn btn-success px-4">
+        <i class="mdi mdi-content-save-outline me-1"></i> Save Store Settings
+      </button>
+    </div>
+  </form>
+</div>
+
+<style>
+  input[type="text"], input[type="email"], input[type="number"], 
+  textarea, select {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+  .form-check-input {
+    width: 2.5em;
+    height: 1.3em;
+  }
+</style>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'sales_layout.html' %}
+{% load static %}
+
+{% block title %}
+    Sales Return List
+{% endblock title %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="return-list-table-responsive card shadow-sm border-0 shadow-lg my-5"
+         style="background-color: #647688; border-radius: 10px;">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover p-0 text-light mb-0">
+                    <thead class="bg-light text-dark">
+                        <tr>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Reason</th>
+                            <th>Recommendations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in returns %}
+                        <tr>
+                            <td>{{ item.return_date|date:"d M Y" }}</td>
+                            <td>{{ item.customer_name }}</td>
+                            <td>{{ item.sale_item.product_name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.price }}</td>
+                            <td class="text-wrap-cell">{{ item.reason }}</td>
+                            <td class="text-wrap-cell">{{ item.recommendations }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">No sales returns found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                {% if page_obj and page_obj.paginator.num_pages > 1 %}
+                <nav class="mt-4 d-flex justify-content-center">
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">« First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">‹ Prev</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next ›</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last »</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                <p class="text-center text-light small mt-2">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    ({{ page_obj.paginator.count }} returns total)
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

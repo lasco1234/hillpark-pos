@@ -1,0 +1,298 @@
+{% extends 'orders_layout.html' %}
+
+{% block title %}New Purchase Order{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-1 responsive-title" style="color: #647688;">New Purchase Order</h1>
+    <p class="text-muted mb-4">Add existing products and/or new items, then save</p>
+
+    <form method="post" id="order-form">
+        {% csrf_token %}
+
+        {% if stores|length > 1 %}
+        <div class="mb-3 col-md-4">
+            <label class="form-label fw-semibold text-muted">Shop</label>
+            <select name="store_id" class="form-select" onchange="location.href='?store_id='+this.value">
+                {% for s in stores %}
+                <option value="{{ s.pk }}" {% if store and store.pk == s.pk %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% else %}
+        <input type="hidden" name="store_id" value="{{ store.pk }}">
+        {% endif %}
+
+        <!-- SUPPLIER -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius:10px; background-color: #647688;">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3 text-white">Supplier Details</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-white">Supplier Name <span class="text-danger">*</span></label>
+                        <input type="text" name="supplier_name" class="form-control" required
+                               placeholder="e.g. Tech Distributors Ltd" style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-white">Email</label>
+                        <input type="email" name="supplier_email" class="form-control"
+                               placeholder="supplier@example.com" style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-white">Phone (WhatsApp)</label>
+                        <input type="text" name="supplier_phone" class="form-control"
+                               placeholder="e.g. 0754123456" style="background-color: rgb(231, 235, 235); color: black;">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-white">Notes</label>
+                        <textarea name="notes" class="form-control" rows="2"
+                                  placeholder="Delivery instructions, payment terms..." style="background-color: rgb(231, 235, 235); color: black;"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXISTING PRODUCTS (searchable) -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius:10px; background-color: #647688;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-white">Existing Products</h5>
+                    <button type="button" class="btn btn-sm btn-outline-light" onclick="addExistingRow()">+ Add row</button>
+                </div>
+                <div id="existing-rows">
+                    <!-- First row -->
+                    <div class="existing-row row g-2 mb-3 align-items-end">
+                        <div class="col-md-5 position-relative">
+                            <label class="form-label small text-white">Product</label>
+                            <input type="text"
+                                   class="form-control form-control-sm product-search-input"
+                                   placeholder="Search product..."
+                                   autocomplete="off"
+                                   style="background-color: rgb(231, 235, 235); color: black;">
+                            <input type="hidden" name="product_id" class="selected-product-id" value="">
+                            <div class="product-dropdown position-absolute w-100 bg-white border rounded shadow-lg"
+                                 style="z-index: 1050; max-height: 260px; overflow-y: auto; display: none;"></div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small text-white">Qty</label>
+                            <input type="number" name="product_qty" class="form-control form-control-sm" min="1" value="1"
+                                   style="background-color: rgb(231, 235, 235); color: black;">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-white">Unit Price</label>
+                            <input type="number" name="product_price" class="form-control form-control-sm product-price" step="1" min="0"
+                                   placeholder="Auto from product" style="background-color: rgb(231, 235, 235); color: black;">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    onclick="this.closest('.existing-row').remove()">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW PRODUCTS -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius:10px; background-color: #647688;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-white">New / Non-existing Products</h5>
+                    <button type="button" class="btn btn-sm btn-outline-light" onclick="addNewRow()">+ Add row</button>
+                </div>
+                <div id="new-rows">
+                    <div class="new-row row g-2 mb-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small text-white">Product Name</label>
+                            <input type="text" name="new_name" class="form-control form-control-sm" placeholder="e.g. HDMI Cable 2m"
+                                   style="background-color: rgb(231, 235, 235); color: black;">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-white">Description</label>
+                            <input type="text" name="new_desc" class="form-control form-control-sm" placeholder="Optional"
+                                   style="background-color: rgb(231, 235, 235); color: black;">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small text-white">Qty</label>
+                            <input type="number" name="new_qty" class="form-control form-control-sm" min="1" value="1"
+                                   style="background-color: rgb(231, 235, 235); color: black;">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small text-white">Unit Price</label>
+                            <input type="number" name="new_price" class="form-control form-control-sm" step="1" min="0" value="0"
+                                   style="background-color: rgb(231, 235, 235); color: black;">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    onclick="this.closest('.new-row').remove()">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn text-white px-4" style="background:#647688;">Create Order</button>
+            <a href="{% url 'orders:order_list' %}" class="btn btn-light border">Cancel</a>
+        </div>
+    </form>
+</div>
+
+{{ products|json_script:"products-data" }}
+
+<script>
+const allProducts = JSON.parse(document.getElementById('products-data').textContent || '[]');
+
+// ---------- Searchable product helpers ----------
+function filterProducts(searchTerm = '') {
+    if (!searchTerm) return allProducts.slice(0, 50); // limit initial list
+    const q = searchTerm.toLowerCase();
+    return allProducts.filter(p =>
+        (p.product_name || '').toLowerCase().includes(q) ||
+        (p.display_name || '').toLowerCase().includes(q) ||
+        (p.product_group || '').toLowerCase().includes(q) ||
+        (p.variant || '').toLowerCase().includes(q)
+    ).slice(0, 50);
+}
+
+function renderDropdown(row, products) {
+    const dropdown = row.querySelector('.product-dropdown');
+    dropdown.innerHTML = '';
+
+    if (products.length === 0) {
+        dropdown.innerHTML = `<div class="p-3 text-muted text-center small">No products found</div>`;
+        dropdown.style.display = 'block';
+        return;
+    }
+
+    products.forEach(p => {
+        const buyPrice = parseFloat(p.buy_price);
+        const safeBuyPrice = isNaN(buyPrice) ? 0 : buyPrice;
+        const name = p.display_name || p.product_name || 'Unnamed';
+
+        const item = document.createElement('div');
+        item.className = 'dropdown-item px-3 py-2';
+        item.style.cursor = 'pointer';
+        item.innerHTML = `
+            <div class="fw-semibold text-dark">${name}</div>
+            <small class="text-muted">Buy: ${safeBuyPrice.toLocaleString()} TZS</small>
+        `;
+        item.addEventListener('click', () => selectProduct(row, p));
+        item.addEventListener('mouseenter', () => item.style.backgroundColor = '#f1f3f5');
+        item.addEventListener('mouseleave', () => item.style.backgroundColor = '');
+        dropdown.appendChild(item);
+    });
+    dropdown.style.display = 'block';
+}
+
+function selectProduct(row, p) {
+    const name = p.display_name || p.product_name || '';
+    row.querySelector('.product-search-input').value = name;
+    row.querySelector('.selected-product-id').value = p.id || p.pk;
+    const price = parseFloat(p.buy_price);
+    row.querySelector('.product-price').value = isNaN(price) ? 0 : Math.round(price);
+    row.querySelector('.product-dropdown').style.display = 'none';
+}
+
+function attachSearchEvents(row) {
+    const input = row.querySelector('.product-search-input');
+    const dropdown = row.querySelector('.product-dropdown');
+
+    input.addEventListener('input', function () {
+        const list = filterProducts(this.value.trim());
+        renderDropdown(row, list);
+    });
+
+    input.addEventListener('focus', function () {
+        const list = filterProducts(this.value.trim());
+        renderDropdown(row, list);
+    });
+
+    // Clear selection if user types again
+    input.addEventListener('input', function () {
+        if (this.value !== (this.dataset.lastSelected || '')) {
+            row.querySelector('.selected-product-id').value = '';
+        }
+    });
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function (e) {
+    document.querySelectorAll('.existing-row').forEach(row => {
+        if (!row.contains(e.target)) {
+            row.querySelector('.product-dropdown').style.display = 'none';
+        }
+    });
+});
+
+// ---------- Add / remove rows ----------
+function addExistingRow() {
+    const html = `
+    <div class="existing-row row g-2 mb-3 align-items-end">
+        <div class="col-md-5 position-relative">
+            <label class="form-label small text-white">Product</label>
+            <input type="text"
+                   class="form-control form-control-sm product-search-input"
+                   placeholder="Search product..."
+                   autocomplete="off"
+                   style="background-color: rgb(231, 235, 235); color: black;">
+            <input type="hidden" name="product_id" class="selected-product-id" value="">
+            <div class="product-dropdown position-absolute w-100 bg-white border rounded shadow-lg"
+                 style="z-index: 1050; max-height: 260px; overflow-y: auto; display: none;"></div>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small text-white">Qty</label>
+            <input type="number" name="product_qty" class="form-control form-control-sm" min="1" value="1"
+                   style="background-color: rgb(231, 235, 235); color: black;">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small text-white">Unit Price</label>
+            <input type="number" name="product_price" class="form-control form-control-sm product-price" step="1" min="0"
+                   placeholder="Auto from product" style="background-color: rgb(231, 235, 235); color: black;">
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    onclick="this.closest('.existing-row').remove()">Remove</button>
+        </div>
+    </div>`;
+    document.getElementById('existing-rows').insertAdjacentHTML('beforeend', html);
+    const newRow = document.getElementById('existing-rows').lastElementChild;
+    attachSearchEvents(newRow);
+}
+
+function addNewRow() {
+    const html = `
+    <div class="new-row row g-2 mb-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small text-white">Product Name</label>
+            <input type="text" name="new_name" class="form-control form-control-sm" placeholder="Product name"
+                   style="background-color: rgb(231, 235, 235); color: black;">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small text-white">Description</label>
+            <input type="text" name="new_desc" class="form-control form-control-sm" placeholder="Description"
+                   style="background-color: rgb(231, 235, 235); color: black;">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small text-white">Qty</label>
+            <input type="number" name="new_qty" class="form-control form-control-sm" min="1" value="1"
+                   style="background-color: rgb(231, 235, 235); color: black;">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small text-white">Unit Price</label>
+            <input type="number" name="new_price" class="form-control form-control-sm" step="1" min="0" value="0"
+                   style="background-color: rgb(231, 235, 235); color: black;">
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    onclick="this.closest('.new-row').remove()">Remove</button>
+        </div>
+    </div>`;
+    document.getElementById('new-rows').insertAdjacentHTML('beforeend', html);
+}
+
+// Init first row
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.existing-row').forEach(row => attachSearchEvents(row));
+});
+</script>
+{% endblock %}

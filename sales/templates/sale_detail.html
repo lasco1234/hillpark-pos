@@ -1,0 +1,75 @@
+{% extends 'sales_layout.html' %}
+{% load humanize %}
+
+{% block title %}
+    Sale #{{ sale.id }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold responsive-title" style="color: #647688;">Sales item {{ sale.id }}</h2>
+        <a href="{% url 'sales_history' %}" class="btn btn-secondary">← Back to Sales</a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm" style="background-color: #647688;">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Sale Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Date & Time:</strong><br>
+                            {{ sale.sale_date|date:"d M, Y - H:i" }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Total Items:</strong><br>
+                            {{ sale.items_count }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Total Amount:</strong><br>
+                            <span class="fs-4 fw-bold text-success">
+                                Tsh {{ sale.total_amount|intcomma }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-4" style="background-color: #647688;">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Items Sold</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-white">
+                                {% for item in items %}
+                                <tr>
+                                    <td><strong>{{ item.product_name }}</strong></td>
+                                    <td>{{ item.category|default:"-" }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>Tsh {{ item.sold_price|intcomma }}</td>
+                                    <td class="fw-bold">Tsh {{ item.subtotal|intcomma }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

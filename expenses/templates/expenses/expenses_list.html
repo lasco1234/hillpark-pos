@@ -1,0 +1,221 @@
+{% extends 'expenses_layout.html' %} 
+{% load humanize %}
+
+{% block title %}Expenses{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="fw-bold mb-0 responsive-title" style="color: #647688;">Expenses</h2>
+        <a href="{% url 'reports:daily_report' %}" class="btn btn-outline-secondary">← Daily Report</a>
+    </div>
+
+    <!-- ========== PERIOD FILTER ========== -->
+    <div class="card shadow-sm mb-4" style="border-radius: 12px; background-color: #647688;">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                {% if stores|length > 1 %}
+                <div class="col-md-3">
+                    <label class="form-label small mb-1 text-light">Shop</label>
+                    <select name="store_id" class="form-select form-select-sm"
+                            style="background-color: #ebf1f7; color: black;"
+                            onchange="this.form.submit()">
+                        {% for s in stores %}
+                        <option value="{{ s.pk }}" {% if store and store.pk == s.pk %}selected{% endif %}>
+                            {{ s.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% else %}
+                <input type="hidden" name="store_id" value="{{ store.pk }}">
+                {% endif %}
+
+                <div class="col-12">
+                    <div class="btn-group flex-wrap" role="group">
+                        <a href="?period=today{% if store %}&store_id={{ store.pk }}{% endif %}"
+                           class="btn btn-sm text-light {% if period == 'today' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            Today
+                        </a>
+                        <a href="?period=week{% if store %}&store_id={{ store.pk }}{% endif %}"
+                           class="btn btn-sm text-light {% if period == 'week' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            This Week
+                        </a>
+                        <a href="?period=month{% if store %}&store_id={{ store.pk }}{% endif %}"
+                           class="btn btn-sm text-light {% if period == 'month' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            This Month
+                        </a>
+                        <a href="?period=year{% if store %}&store_id={{ store.pk }}{% endif %}"
+                           class="btn btn-sm text-light {% if period == 'year' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            This Year
+                        </a>
+                        <a href="?period=all{% if store %}&store_id={{ store.pk }}{% endif %}"
+                           class="btn btn-sm text-light {% if period == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            All Time
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small mb-1 text-light">From</label>
+                    <input type="date" name="start_date" value="{{ start_date }}"
+                           class="form-control form-control-sm"
+                           style="background-color: #ebf1f7; color: black;">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1 text-light">To</label>
+                    <input type="date" name="end_date" value="{{ end_date }}"
+                           class="form-control form-control-sm"
+                           style="background-color: #ebf1f7; color: black;">
+                </div>
+                <div class="col-md-3">
+                    <input type="hidden" name="period" value="custom">
+                    {% if store %}<input type="hidden" name="store_id" value="{{ store.pk }}">{% endif %}
+                    <button type="submit" class="btn btn-sm btn-success w-100">
+                        Apply Custom Range
+                    </button>
+                </div>
+                <div class="col-md-3 text-md-end">
+                    <span class="badge bg-secondary fs-6">
+                        Showing: {{ period_label }}
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== TOTAL CARD ========== -->
+    <div class="card bg-light text-dark my-4 shadow-sm" style="border-radius: 15px;">
+        <div class="card-body row">
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(163, 160, 158);">
+                        <i class="mdi mdi-cash-multiple"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Total Expenses</div>
+                        <div class="fw-bold">Tsh. {{ total_expenses|floatformat:0|intcomma }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(163, 160, 158);">
+                        <i class="mdi mdi-receipt"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Number of Entries</div>
+                        <div class="fw-bold">{{ total_count }}</div>
+                    </div>
+                </div>
+            </div>
+            {% if store %}
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="customer_items row">
+                    <div class="customer_items_icons ml-3" style="background-color: rgb(163, 160, 158);">
+                        <i class="mdi mdi-store"></i>
+                    </div>
+                    <div class="ml-3 customer_items_content">
+                        <div>Shop</div>
+                        <div class="fw-bold">{{ store.name }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ========== EXPENSES TABLE ========== -->
+    <div class="card shadow-sm border-0 shadow-lg" style="background-color: #647688; border-radius: 10px;">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Purpose</th>
+                            <th class="text-end">Amount (TZS)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-light">
+                        {% for expense in page_obj %}
+                        <tr>
+                            <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                            <td>{{ expense.date|date:"d M, Y" }}</td>
+                            <td>{{ expense.purpose }}</td>
+                            <td class="text-end fw-bold">{{ expense.amount|floatformat:0|intcomma }}</td>
+                        
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                No expenses recorded for this period
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- Pagination (same style as Sales History) -->
+                {% if page_obj and page_obj.paginator.num_pages > 1 %}
+                <nav class="mt-4 d-flex justify-content-center">
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?page=1&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                                    « First
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?page={{ page_obj.previous_page_number }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                                    ‹ Prev
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?page={{ num }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                                        {{ num }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?page={{ page_obj.next_page_number }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                                    Next ›
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?page={{ page_obj.paginator.num_pages }}&period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}{% if store %}&store_id={{ store.pk }}{% endif %}">
+                                    Last »
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                <p class="text-center text-light small mt-2">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    ({{ page_obj.paginator.count }} expenses total)
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
