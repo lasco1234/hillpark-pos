@@ -1,7 +1,8 @@
-from .models import Notification, NotificationPreference
+from django.db.models.query import QuerySet
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
-from django.conf import settings
+
+from .models import Notification, NotificationPreference
+from .email_utils import send_email_async
 
 User = get_user_model()
 
@@ -21,7 +22,7 @@ ICON_MAP = {
 
 
 def _get_admin_emails():
-    """Get email addresses of all admin users (with a preference record or default)."""
+    """Get email addresses of all admin users."""
     return list(
         User.objects.filter(
             is_active=True,
@@ -33,13 +34,10 @@ def _get_admin_emails():
     )
 
 
-from django.db.models.query import QuerySet
-
-
 def notify_users(users, title, message, level="info", icon="mdi-bell", link=None, store=None, notification_type=""):
     """
     Create in-app notification for one or multiple users,
-    AND send email to all admins.
+    AND send email to all admins (async, non-blocking).
 
     Skips users who have disabled the given `notification_type`
     in their NotificationPreference.
@@ -74,19 +72,10 @@ def notify_users(users, title, message, level="info", icon="mdi-bell", link=None
     if notifications:
         Notification.objects.bulk_create(notifications)
 
-    # Send email to all admins
+    # Send email to all admins (in background, non-blocking)
     admin_emails = _get_admin_emails()
     if admin_emails:
-        try:
-            send_mail(
-                subject=title,
-                message=message,
-                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@example.com"),
-                recipient_list=admin_emails,
-                fail_silently=True,
-            )
-        except Exception:
-            pass
+        send_email_async(subject=title, message=message, recipient_list=admin_emails)
 
 
 # ---------------------------------------------------------------------------

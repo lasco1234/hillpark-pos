@@ -4,14 +4,12 @@ import logging
 from decimal import Decimal
 from typing import List, Optional, Sequence
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import EmailMultiAlternatives, send_mail
 from django.db.models import Q
 from django.utils import timezone
-from django.utils.html import strip_tags
 
 from .models import Notification
+from .email_utils import send_email_async
 from notifications.models import NotificationPreference
 
 User = get_user_model()
@@ -166,48 +164,7 @@ def notify_owners(
 
 
 # ---------------------------------------------------------------------------
-# Email
-# ---------------------------------------------------------------------------
-
-def send_email_notification(
-    subject: str,
-    message: str,
-    recipient_list: Sequence[str],
-    html_message: Optional[str] = None,
-    from_email: Optional[str] = None,
-) -> int:
-    """Send plain/HTML email. Returns number of successfully sent messages."""
-    recipients = [e for e in recipient_list if e and "@" in e]
-    if not recipients:
-        logger.warning("No valid email recipients for: %s", subject)
-        return 0
-
-    from_email = from_email or getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@example.com")
-    try:
-        if html_message:
-            email = EmailMultiAlternatives(
-                subject=subject,
-                body=strip_tags(message),
-                from_email=from_email,
-                to=recipients,
-            )
-            email.attach_alternative(html_message, "text/html")
-            email.send(fail_silently=False)
-            return len(recipients)
-        return send_mail(
-            subject=subject,
-            message=message,
-            from_email=from_email,
-            recipient_list=recipients,
-            fail_silently=False,
-        )
-    except Exception as e:
-        logger.exception("Email send failed (%s): %s", subject, e)
-        return 0
-
-
-# ---------------------------------------------------------------------------
-# High-level convenience: notify + email
+# High-level convenience: notify + email (email is async)
 # ---------------------------------------------------------------------------
 
 def full_notify(
@@ -229,7 +186,7 @@ def full_notify(
     notification_type: str = "",
 ) -> dict:
     """
-    Create in-app notifications and send emails.
+    Create in-app notifications (synchronous) and send emails (async).
     Returns summary dict: {"in_app": N, "emails": N}
     """
     result = {"in_app": 0, "emails": 0}
@@ -258,12 +215,14 @@ def full_notify(
     if extra_emails:
         emails.update(e for e in extra_emails if e)
     if emails:
-        result["emails"] = send_email_notification(
+        # === ASYNC: send email in background thread ===
+        send_email_async(
             subject=email_subject or title,
             message=email_body or message,
             recipient_list=list(emails),
             html_message=email_html,
         )
+        result["emails"] = len(emails)
 
     return result
 
@@ -329,6 +288,7 @@ def notify_daily_report(
         email_body=message,
         email_html=html,
         notify_owners_only=True,
+        notification_type="daily_report",
     )
 
 
@@ -366,9 +326,10 @@ def notify_order_created(order, created_by=None):
         email_subject=title,
         email_body=owner_msg,
         notify_owners_only=True,
+        notification_type="order_created",
     )
 
-    # Supplier email only
+    # Supplier email only (async)
     supplier_body = (
         f"Dear {order.supplier_name},\n\n"
         f"You have a new purchase order from {store.name}.\n"
@@ -386,7 +347,7 @@ def notify_order_created(order, created_by=None):
 
     extra_emails = [order.supplier_email] if order.supplier_email else []
     if extra_emails:
-        send_email_notification(
+        send_email_async(
             subject=f"Purchase Order {order.order_number} from {store.name}",
             message=supplier_body,
             recipient_list=extra_emails,
@@ -422,6 +383,7 @@ def notify_stock_adjustment(
         email_subject=title,
         email_body=msg,
         notify_owners_only=True,
+        notification_type="stock_adjustment",
     )
 
 
@@ -480,6 +442,7 @@ def notify_product_updated(product, updated_by=None):
         email_subject=title,
         email_body=msg,
         notify_owners_only=True,
+        notification_type="product_updated",
     )
 
 
@@ -501,6 +464,7 @@ def notify_product_deleted(product_name, store, deleted_by=None, permanent=False
         email_subject=title,
         email_body=msg,
         notify_owners_only=True,
+        notification_type="product_deleted",
     )
 
 
@@ -524,6 +488,7 @@ def notify_store_created(store, created_by=None):
         email_subject=title,
         email_body=msg,
         notify_owners_only=True,
+        notification_type="store_created",
     )
 
 
@@ -556,6 +521,7 @@ def notify_installment_created(installment, created_by=None):
         email_subject=title,
         email_body=msg,
         extra_emails=[installment.customer_email] if installment.customer_email else None,
+        notification_type="installment_created",
     )
 
 
@@ -598,6 +564,7 @@ def notify_installment_reminder(installment):
         email_subject=title,
         email_body=msg,
         extra_emails=[installment.customer_email] if installment.customer_email else None,
+        notification_type="installment_reminder",
     )
 
 
@@ -622,6 +589,7 @@ def notify_installment_completed(installment):
         related_object_id=installment.pk,
         email_subject=title,
         email_body=msg,
+        notification_type="installment_completed",
     )
 
 
@@ -662,5 +630,5 @@ def notify_user_registered(new_user, registered_by=None):
         email_subject=title,
         email_body=msg,
         notify_owners_only=True,
+        notification_type="user_registered",
     )
-
