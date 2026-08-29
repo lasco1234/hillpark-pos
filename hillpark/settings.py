@@ -10,11 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
+import dj_database_url
 
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 from django.contrib.messages import constants as message_constants
 
 
@@ -22,12 +22,16 @@ from django.contrib.messages import constants as message_constants
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-u0(1&8)+*p&@w#dlqa5(gk$1*-k^h&)3=d_)2wsn$to^7s89ui'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-temporary-key-for-local-use-only')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = 'RENDER' not in os.environ
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = []
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -61,13 +65,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',          # ← Must be here
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'hillpark.middleware.StoreMiddleware',
 ]
 
@@ -101,10 +105,11 @@ CSRF_TRUSTED_ORIGINS = [
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default='sqlite:///db.sqlite3',
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 
@@ -146,12 +151,14 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'dashboard' / 'static',     # ← Corrected (no double hillpark)
 ]
 
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -162,13 +169,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 BACKUPS_DIR = BASE_DIR / "backups"
 
 
-# ================== EMAIL (REAL) ==================
+# ================== EMAIL ==================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'info.senjeletech05@gmail.com'
-EMAIL_HOST_PASSWORD = 'rbmbozjdhfuatbqw'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'info.senjeletech05@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = 'POS System <info.senjeletech05@gmail.com>'
 EMAIL_TIMEOUT = 30
 SERVER_EMAIL = EMAIL_HOST_USER
