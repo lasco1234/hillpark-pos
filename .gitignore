@@ -31,7 +31,3 @@ local_settings.py
 .vscode/
 .DS_Store
 Thumbs.db
-
-# Backup folders
-backup/
-backups/
